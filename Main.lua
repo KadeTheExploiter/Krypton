@@ -1,9 +1,9 @@
---[[ 
+	--[[ 
 	Krypton's Rework Release.
   Release: 1.0.0
 	Author: @xyzkade / https://discord.gg/A7VexVaZDA
 ]]
-
+local Global = (getgenv and getgenv()) or getfenv(0) or _G
 local Tick = tick()
 local Settings = Global.KryptonReanimateConfig
 local Wait = task.wait
