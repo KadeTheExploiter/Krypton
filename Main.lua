@@ -216,7 +216,6 @@ do -- [[ Rig Creation ]] --
 
 	if Settings.R15 == false then
 		FakeHumanoid.RigType = Enum.HumanoidRigType.R6
-		FakeHumanoid.HipHeight = 2
 		local FRightArm = CreatePart("Right Arm", LimbSize, FakeRig)
 		local FLeftArm = CreatePart("Left Arm", LimbSize, FakeRig)
 		local FRightLeg = CreatePart("Right Leg", LimbSize, FakeRig)
