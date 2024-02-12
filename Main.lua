@@ -17,6 +17,7 @@ local MathRad = math.rad
 local MathRand = math.random
 local NewInstance = Instance.new
 
+local SHP = sethiddenproperty or set_hidden_property or function() end
 local TClear = table.clear
 
 local Vector3New = Vector3.new
@@ -394,6 +395,8 @@ do -- [[ Events ]]
 	end)
 
 	Noclip = PreSimulation:Connect(function()
+		SHP(LocalPlayer, "MaximumSimulationRadius", 2763)
+		SHP(LocalPlayer, "SimulationRadius", 2763) -- boosts sim radius (i know the limit is 1000 but this actually makes it so it stays on 1000)
 		for i=1,#Descendants do
 			local x = Descendants[i]
 
