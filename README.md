@@ -10,46 +10,60 @@ local CFAngles = CFrame.Angles
 local CFZero = CFrame.identity
 
 Global.KryptonReanimateConfig = {
-    R15 = false,
-    DebugPrints = false,
-    DebugTransparency = 1,
-    Animations = false,
-    HideRealChar = true,
-    WaitTime = 0.07, -- 0.05 min.
-    AntiVoid = true,
-    StopMethod = "Reset", -- "Reset", "Chat", "Both"
-    StopMessage = "/e stop",
-    Hats = {
-        ["Right Arm"] = { -- Right Arm
-            Texture = "rbxassetid://12344206675",
-            Mesh = "rbxassetid://12344206657",
-            Offset = CFrameNew(0,0.09,0) * CFAngles(MathRad(-125),0,0)
-        }, -- Right Arm
+-- Rig Properties
+	R15 = false,
+	Animations = false,
+	HideRealChar = false,
 
-        ["Left Arm"] = { -- Left Arm
-            Texture = "rbxassetid://12344207341", 
-            Mesh = "rbxassetid://12344207333",
-            Offset = CFrameNew(0,0,0) * CFAngles(MathRad(-125),0,0)
-        }, -- Left Arm
+	-- Properties
+	CheckOwnership = true,
+	WaitTime = 0.21, --0.2 min.
+	AntiVoid = true,
+	
+	-- Fling
+	Fling = true,
+	FlingOnLoad = false,
+	FlingLockIn = true,
 
-        ["Right Leg"] = { -- Right Leg
-            Texture = "http://www.roblox.com/asset/?id=11263219250", 
-            Mesh = "rbxassetid://11263221350",
-            Offset = CFrameNew(0,0,0) * CFAngles(0,MathRad(-90), MathRad(90))
-        }, -- Right Leg
+	-- Resetting
+	StopMethod = "Reset", -- "Reset", "Chat", "Both"
+	StopMessage = "/e stop",
+	
+	Hats = {
+		["Right Arm"] = { -- Right Arm
+			Texture = "rbxassetid://12344206675",
+			Mesh = "rbxassetid://12344206657",
+			Offset = CFrameNew(0,0.09,0) * CFAngles(MathRad(-125),0,0)
+		}, -- Right Arm
 
-        ["Left Leg"] = { -- Left Leg
-            Texture = "http://www.roblox.com/asset/?id=11159284657", 
-            Mesh = "rbxassetid://11159370334",
-            Offset = CFrameNew(0,0,0) * CFAngles(0,MathRad(-90), MathRad(90))
-        }, -- Left Leg
+		["Left Arm"] = { -- Left Arm
+			Texture = "rbxassetid://12344207341", 
+			Mesh = "rbxassetid://12344207333",
+			Offset = CFrameNew(0,0,0) * CFAngles(MathRad(-125),0,0)
+		}, -- Left Arm
 
-        ["Torso"] = { -- Left Leg
-            Texture = "", 
-            Mesh = "",
-            Offset = CFZero
-        }, -- Left Leg
-    }
+		["Right Leg"] = { -- Right Leg
+			Texture = "http://www.roblox.com/asset/?id=11263219250", 
+			Mesh = "rbxassetid://11263221350",
+			Offset = CFrameNew(0,0,0) * CFAngles(0,MathRad(-90), MathRad(90))
+		}, -- Right Leg
+
+		["Left Leg"] = { -- Left Leg
+			Texture = "http://www.roblox.com/asset/?id=11159284657", 
+			Mesh = "rbxassetid://11159370334",
+			Offset = CFrameNew(0,0,0) * CFAngles(0,MathRad(-90), MathRad(90))
+		}, -- Left Leg
+
+		["Torso"] = { -- Left Leg
+			Texture = "", 
+			Mesh = "",
+			Offset = CFZero
+		}, -- Left Leg
+	},
+
+	-- Debug
+	DebugPrints = false,
+	DebugTransparency = 1,
 }
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Krypton/main/Main.lua"))()
