@@ -1,9 +1,9 @@
-	--[[ 
+--[[ 
 	Krypton's Rework Release.
-  Release: 1.0.0
+	Release: 1.1.0
 	Author: @xyzkade / https://discord.gg/A7VexVaZDA
 ]]
-local Global = (getgenv and getgenv()) or getfenv(0) or _G
+
 local Tick = tick()
 local Settings = Global.KryptonReanimateConfig
 local Wait = task.wait
@@ -21,6 +21,7 @@ local SHP = sethiddenproperty or set_hidden_property or function() end
 local TClear = table.clear
 
 local Vector3New = Vector3.new
+local VectorFling = Vector3New(5000,5000,5000)
 local CFrameNew = CFrame.new
 local CFAngles = CFrame.Angles
 local CFZero = CFrame.identity
@@ -40,6 +41,22 @@ local UsedHats = {}
 local Descendants = {}
 local Children = {}
 local FakeRigDescendants = {}
+
+local FlingPart; if Settings.Fling then
+	FlingPart = NewInstance("Part"); do
+		FlingPart.CanCollide = false
+		FlingPart.CanQuery = false
+		FlingPart.Anchored = true
+		FlingPart.Name = "FlingPart"
+		FlingPart.Transparency = 1
+		FlingPart.Size = Vector3New(1,1,1)
+		FlingPart.Parent = FakeRig
+		local Highlight = NewInstance("SelectionBox")
+		Highlight.Parent = FlingPart
+		Highlight.Adornee = FlingPart
+		Highlight.Color3 = Color3.fromRGB(65, 255, 113)
+	end
+end
 
 local StarterGui = game:FindFirstChildOfClass("StarterGui")
 local RunService = game:FindFirstChildOfClass("RunService")
@@ -87,11 +104,14 @@ local CreatePart, CreateJoint, CreateAttachment, WFCOC, AlignCFrame, GetTextureI
 		return Parent:FindFirstChildOfClass(Classname)
 	end
 
+	local INO = Settings.CheckOwnership and isnetworkowner or function(Part)
+		return Part.ReceiveAge==0 
+	end or function() end
 	AlignCFrame = function(Part0, Part1, Offset)
 		Part0.AssemblyLinearVelocity = Vector3New(Part1.AssemblyLinearVelocity.X * (Part1.Mass * 8), 35 + MathRand(20, 60) / MathRand(8, 15), Part1.AssemblyLinearVelocity.Z * (Part1.Mass * 8))
 		Part0.AssemblyAngularVelocity = Part1.AssemblyAngularVelocity
 
-		if Part0.ReceiveAge == 0 then
+		if INO(Part0) then
 			Part0.CFrame = Part1.CFrame * CFAnti * Offset
 		end
 	end
@@ -357,37 +377,66 @@ end
 
 do -- [[ Events ]]
 	local HideChar = Settings.HideRealChar
+	local Fling = Settings.Fling
 	if HideChar then
 		HideChildren()
 	end
 
 	AutoRespawn = LocalPlayer.CharacterAdded:Connect(function()
-		TClear(UsedHats)
 		Character = LocalPlayer.Character
+		TClear(UsedHats)
+
 		RootPart = Character:WaitForChild("HumanoidRootPart")
-		RootPart.CFrame = FRoot.CFrame * CFrameNew(MathRand(-20, 20), 0, MathRand(-20, 20))	
 		Humanoid = WFCOC(Character, "Humanoid")
 		WFCOC(Character, "Accessory")
-		Wait(Settings.WaitTime); PostSimulation:Wait()
+		Humanoid:ChangeState("Physics")
 
-		FakeRigDescendants = FakeRig:GetDescendants()
 		Children = Character:GetChildren()
 		Descendants = Character:GetDescendants()
-		RecreateHats(Descendants, FakeRigDescendants, FakeRig)
 		FakeRigDescendants = FakeRig:GetDescendants()
 
+		RecreateHats(Descendants, FakeRigDescendants, FakeRig)
+
+		Character.Parent = FakeRig -- Make the first person mode better
 		if HideChar then
 			HideChildren()
 		end
 
-		RootPart.Velocity = Vector3zero
-		Character.Parent = FakeRig -- Make the first person mode better
+		local TempEvent;
+		local ReturnCFrame = FRoot.CFrame * CFrameNew(MathRand(-20, 20), 0, MathRand(-20, 20))	
+		if Fling and FlingPart then
+			local Highlight = FlingPart:FindFirstChild("SelectionBox")
+			Highlight.Color3 = Color3.fromRGB(255, 25, 25)
+			TempEvent = PostSimulation:Connect(function()
+				RootPart.AssemblyLinearVelocity = VectorFling
+				RootPart.RotVelocity = Vector3zero
+				RootPart.CFrame = FlingPart.CFrame
+			end)
+
+			Wait(Settings.WaitTime)
+			Wait(PreSimulation:Wait() * PostSimulation:Wait())
+			TempEvent:Disconnect()
+			Highlight.Color3 = Color3.fromRGB(65, 255, 113)
+		end
+
+		TempEvent = PostSimulation:Connect(function()
+			RootPart.AssemblyLinearVelocity = Vector3zero
+			RootPart.RotVelocity = Vector3zero
+			RootPart.CFrame = ReturnCFrame
+		end)
+
+		Wait(Settings.WaitTime + 0.05)
+		Wait(PreSimulation:Wait() * PostSimulation:Wait())
+
 		Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+		TempEvent:Disconnect()
+		FakeRigDescendants = FakeRig:GetDescendants()
 		StartTheHats()
 	end)
 
 	CameraFix = Camera:GetPropertyChangedSignal("CameraSubject"):Connect(function() -- [[ Camera Fix]]
 		local CFrameCF = Camera.CFrame
+
 		Camera.CameraSubject = FakeHumanoid
 		PreRender:Once(function()
 			Camera.CFrame = CFrameCF	
@@ -397,6 +446,7 @@ do -- [[ Events ]]
 	Noclip = PreSimulation:Connect(function()
 		SHP(LocalPlayer, "MaximumSimulationRadius", 2763)
 		SHP(LocalPlayer, "SimulationRadius", 2763) -- boosts sim radius (i know the limit is 1000 but this actually makes it so it stays on 1000)
+
 		for i=1,#Descendants do
 			local x = Descendants[i]
 
@@ -428,8 +478,55 @@ do -- [[ Events ]]
 		FakeHumanoid.Jump = Humanoid.Jump
 
 		RotVelocityOffset = Vector3New(0, MathSin(Clock())*5, 0)
-		CFAnti = CFrameNew(0.0065 * MathSin(Clock()*32), 0, 0.0065 * MathCos(Clock()*32))
+		CFAnti = CFrameNew(0.007 * MathSin(Clock()*32), 0, 0.0065 * MathCos(Clock()*32))
 	end)
+
+	if Fling and Settings.FlingOnLoad and FlingPart then
+		local FlingLockIn = Settings.FlingLockIn or false
+		local FlingingEvents = {}
+		local Mouse = LocalPlayer:GetMouse()
+		local CurrentTarget = nil
+		local TargetHumanoid = nil
+		local MouseDown = false
+		local DefaultOffset = CFrameNew(0, -100, 0)
+		FlingPart.Anchored = false
+		FlingingEvents[#FlingingEvents+1] = Mouse.Button1Down:Connect(function()
+			MouseDown = true
+		end)
+
+		FlingingEvents[#FlingingEvents+1] = Mouse.Button1Up:Connect(function()
+			MouseDown = false
+		end)
+
+		local FlingFunction = function()
+			FlingPart.CFrame = Mouse.hit
+		end
+
+		if FlingLockIn then
+			FlingFunction = function()
+				CurrentTarget = Mouse.Target.Parent and Mouse.Target.Parent:FindFirstChildOfClass("Part") or Mouse.Target.Parent.Parent and Mouse.Target.Parent.Parent:FindFirstChildOfClass("Part")
+				if CurrentTarget and CurrentTarget.Name == "HumanoidRootPart" or CurrentTarget.Name == "Head" or CurrentTarget.Name == "Handle" then
+					TargetHumanoid = CurrentTarget.Parent:FindFirstChildOfClass("Humanoid") or CurrentTarget.Parent.Parent:FindFirstChildOfClass("Humanoid") 
+					if TargetHumanoid and TargetHumanoid.MoveDirection.Magnitude >= 0.1 then
+						FlingPart.CFrame = CFrameNew(CurrentTarget.Position) * CFrameNew(TargetHumanoid.MoveDirection*7.5)
+					else
+						FlingPart.CFrame = CFrameNew(CurrentTarget.Position) * (CurrentTarget.Velocity.Magnitude > 6 and CFrameNew(CurrentTarget.CFrame.LookVector*MathRand(-4, 5)) or CFZero)
+					end
+				else
+					FlingPart.CFrame = Mouse.hit
+				end
+			end
+		end
+
+		FlingingEvents[#FlingingEvents+1] = PostSimulation:Connect(function()
+			FlingPart.AssemblyLinearVelocity = Vector3zero
+			if MouseDown and Mouse.Target ~= nil then
+				FlingFunction()
+			else
+				FlingPart.CFrame = DefaultOffset
+			end
+		end)
+	end
 end
 
 do -- [[ Stop Events ]] --
@@ -479,4 +576,4 @@ end
 
 StartTheHats()
 
-return FakeRig
+return {FakeRig, FlingPart}
