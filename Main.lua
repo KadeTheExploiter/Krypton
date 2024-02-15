@@ -104,9 +104,8 @@ local CreatePart, CreateJoint, CreateAttachment, WFCOC, AlignCFrame, GetTextureI
 		return Parent:FindFirstChildOfClass(Classname)
 	end
 
-	local INO = Settings.CheckOwnership and isnetworkowner or function(Part)
-		return Part.ReceiveAge==0 
-	end or function() end
+	local rr = isnetworkowner or function(p) return p.ReceiveAge==0 end
+	local INO = Settings.CheckOwnership and rr or function() return true end
 	AlignCFrame = function(Part0, Part1, Offset)
 		Part0.AssemblyLinearVelocity = Vector3New(Part1.AssemblyLinearVelocity.X * (Part1.Mass * 8), 35 + MathRand(20, 60) / MathRand(8, 15), Part1.AssemblyLinearVelocity.Z * (Part1.Mass * 8))
 		Part0.AssemblyAngularVelocity = Part1.AssemblyAngularVelocity
