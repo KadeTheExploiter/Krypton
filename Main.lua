@@ -1,6 +1,6 @@
 --[[ 
 	Krypton's Rework Release.
-	Release: 1.1.0
+	Release: 1.1.1
 	Author: @xyzkade / https://discord.gg/A7VexVaZDA
 ]]
 
@@ -11,6 +11,7 @@ local Delay = task.delay
 local Defer = task.defer
 
 local Clock = os.clock
+local Tick = Clock()
 local MathCos = math.cos
 local MathSin = math.sin
 local MathRad = math.rad
@@ -20,6 +21,7 @@ local NewInstance = Instance.new
 local SHP = sethiddenproperty or set_hidden_property or function() end
 local TClear = table.clear
 
+local MouseDown = false
 local Vector3New = Vector3.new
 local VectorFling = Vector3New(5000,5000,5000)
 local CFrameNew = CFrame.new
@@ -37,6 +39,7 @@ local FakeHumanoid = nil
 
 local CheckAntiVoid = Settings.AntiVoid or false
 local Hats = Settings.Hats
+local FlingingEvents = {}
 local UsedHats = {}
 local Descendants = {}
 local Children = {}
@@ -218,13 +221,22 @@ end
 
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character
-
+local Mouse = LocalPlayer:GetMouse()
 local Humanoid = WFCOC(Character, "Humanoid")
 local RootPart = Character:WaitForChild("HumanoidRootPart")
 Descendants = Character:GetDescendants()
 Children = Character:GetChildren()
 local FRoot = CreatePart("HumanoidRootPart", TorsoSize, FakeRig)
 FakeHumanoid = NewInstance("Humanoid"); FakeHumanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None; FakeHumanoid.Parent = FakeRig
+
+
+FlingingEvents[#FlingingEvents+1] = Mouse.Button1Down:Connect(function()
+	MouseDown = true
+end)
+
+FlingingEvents[#FlingingEvents+1] = Mouse.Button1Up:Connect(function()
+	MouseDown = false
+end)
 
 do -- [[ Rig Creation ]] --
 	local FHead;
@@ -236,116 +248,130 @@ do -- [[ Rig Creation ]] --
 
 	if Settings.R15 == false then
 		FakeHumanoid.RigType = Enum.HumanoidRigType.R6
-		local FRightArm = CreatePart("Right Arm", LimbSize, FakeRig)
-		local FLeftArm = CreatePart("Left Arm", LimbSize, FakeRig)
-		local FRightLeg = CreatePart("Right Leg", LimbSize, FakeRig)
-		local FLeftLeg = CreatePart("Left Leg", LimbSize, FakeRig)
-		local FTorso = CreatePart("Torso", TorsoSize, FakeRig)
 		FHead = CreatePart("Head", Vector3New(2, 1, 1), FakeRig)
-		CreateJoint("Neck", FTorso, FHead, CFrameNew(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 1, -0), CFrameNew(0, -0.5, 0, -1, 0, 0, 0, 0, 1, 0, 1, -0))
-		CreateJoint("RootJoint", FRoot, FTorso, CFrameNew(0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, -0), CFrameNew(0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, -0))
-		CreateJoint("Right Shoulder", FTorso, FRightArm, CFrameNew(1, 0.5, 0, 0, 0, 1, 0, 1, -0, -1, 0, 0), CFrameNew(-0.5, 0.5, 0, 0, 0, 1, 0, 1, -0, -1, 0, 0))
-		CreateJoint("Left Shoulder", FTorso, FLeftArm, CFrameNew(-1, 0.5, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0), CFrameNew(0.5, 0.5, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0))
-		CreateJoint("Right Hip", FTorso, FRightLeg, CFrameNew(1, -1, 0, 0, 0, 1, 0, 1, -0, -1, 0, 0), CFrameNew(0.5, 1, 0, 0, 0, 1, 0, 1, -0, -1, 0, 0))
-		CreateJoint("Left Hip", FTorso, FLeftLeg, CFrameNew(-1, -1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0), CFrameNew(-0.5, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0))
-		CreateAttachment("HairAttachment", CFrameNew(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
-		CreateAttachment("HatAttachment", CFrameNew(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
-		CreateAttachment("FaceFrontAttachment", CFrameNew(0, 0, -0.6, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
-		CreateAttachment("FaceCenterAttachment", CFrameNew(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
-		CreateAttachment("RootAttachment", CFrameNew(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRoot)
-		CreateAttachment("LeftShoulderAttachment", CFrameNew(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftArm)
-		CreateAttachment("LeftGripAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftArm)
-		CreateAttachment("RightShoulderAttachment", CFrameNew(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightArm)
-		CreateAttachment("RightGripAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightArm)
-		CreateAttachment("LeftFootAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLeg)
-		CreateAttachment("RightFootAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLeg)
-		CreateAttachment("NeckAttachment", CFrameNew(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
-		CreateAttachment("BodyFrontAttachment", CFrameNew(0, 0, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
-		CreateAttachment("BodyBackAttachment", CFrameNew(0, 0, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
-		CreateAttachment("LeftCollarAttachment", CFrameNew(-1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
-		CreateAttachment("RightCollarAttachment", CFrameNew(1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
-		CreateAttachment("WaistFrontAttachment", CFrameNew(0, -1, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
-		CreateAttachment("WaistCenterAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
-		CreateAttachment("WaistBackAttachment", CFrameNew(0, -1, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso);
+		task.defer(function()
+			local FRightArm = CreatePart("Right Arm", LimbSize, FakeRig)
+			local FLeftArm = CreatePart("Left Arm", LimbSize, FakeRig)
+			local FRightLeg = CreatePart("Right Leg", LimbSize, FakeRig)
+			local FLeftLeg = CreatePart("Left Leg", LimbSize, FakeRig)
+			local FTorso = CreatePart("Torso", TorsoSize, FakeRig)
+			CreateJoint("Neck", FTorso, FHead, CFrameNew(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 1, -0), CFrameNew(0, -0.5, 0, -1, 0, 0, 0, 0, 1, 0, 1, -0))
+			CreateJoint("RootJoint", FRoot, FTorso, CFrameNew(0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, -0), CFrameNew(0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, -0))
+			CreateJoint("Right Shoulder", FTorso, FRightArm, CFrameNew(1, 0.5, 0, 0, 0, 1, 0, 1, -0, -1, 0, 0), CFrameNew(-0.5, 0.5, 0, 0, 0, 1, 0, 1, -0, -1, 0, 0))
+			CreateJoint("Left Shoulder", FTorso, FLeftArm, CFrameNew(-1, 0.5, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0), CFrameNew(0.5, 0.5, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0))
+			CreateJoint("Right Hip", FTorso, FRightLeg, CFrameNew(1, -1, 0, 0, 0, 1, 0, 1, -0, -1, 0, 0), CFrameNew(0.5, 1, 0, 0, 0, 1, 0, 1, -0, -1, 0, 0))
+			CreateJoint("Left Hip", FTorso, FLeftLeg, CFrameNew(-1, -1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0), CFrameNew(-0.5, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0))
+			CreateAttachment("HairAttachment", CFrameNew(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
+			CreateAttachment("HatAttachment", CFrameNew(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
+			CreateAttachment("FaceFrontAttachment", CFrameNew(0, 0, -0.6, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
+			CreateAttachment("FaceCenterAttachment", CFrameNew(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
+			CreateAttachment("RootAttachment", CFrameNew(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRoot)
+			CreateAttachment("LeftShoulderAttachment", CFrameNew(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftArm)
+			CreateAttachment("LeftGripAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftArm)
+			CreateAttachment("RightShoulderAttachment", CFrameNew(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightArm)
+			CreateAttachment("RightGripAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightArm)
+			CreateAttachment("LeftFootAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLeg)
+			CreateAttachment("RightFootAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLeg)
+			CreateAttachment("NeckAttachment", CFrameNew(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
+			CreateAttachment("BodyFrontAttachment", CFrameNew(0, 0, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
+			CreateAttachment("BodyBackAttachment", CFrameNew(0, 0, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
+			CreateAttachment("LeftCollarAttachment", CFrameNew(-1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
+			CreateAttachment("RightCollarAttachment", CFrameNew(1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
+			CreateAttachment("WaistFrontAttachment", CFrameNew(0, -1, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
+			CreateAttachment("WaistCenterAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
+			CreateAttachment("WaistBackAttachment", CFrameNew(0, -1, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FTorso)
+
+			local Face = NewInstance("Decal"); Face.Name = "face"; Face.Texture = "rbxasset://textures/face.png"; Face.Transparency = 1; Face.Parent = FHead
+			local HeadMesh = NewInstance("SpecialMesh"); HeadMesh.Scale = Vector3New(1.25, 1.25, 1.25); HeadMesh.Parent = FHead
+			local Animate = NewInstance("LocalScript"); Animate.Name = "Animate"; Animate.Parent = FakeRig
+			local Health = NewInstance("Script"); Health.Name = "Health"; Health.Parent = FakeRig
+		end)
 	else
 		FakeHumanoid.RigType = Enum.HumanoidRigType.R15
 		FakeHumanoid.HipHeight = 2
 		FHead = CreatePart("Head", Vector3New(2, 1, 1), FakeRig)
-		local FLeftHand = CreatePart("LeftHand", Vector3New(1, 0.3, 1), FakeRig)
-		local FRightFoot = CreatePart("RightFoot", Vector3New(1, 0.3, 1), FakeRig)
-		local FRightUpperArm = CreatePart("RightUpperArm", Vector3New(1, 1.169, 1), FakeRig)
-		local FRightUpperLeg = CreatePart("RightUpperLeg", Vector3New(1, 1.217, 1), FakeRig)
-		local FRightHand = CreatePart("RightHand", Vector3New(1, 0.3, 1), FakeRig)
-		local FLeftLowerLeg = CreatePart("LeftLowerLeg", Vector3New(1, 1.193, 1), FakeRig)
-		local FUpperTorso = CreatePart("UpperTorso", Vector3New(2, 1.6, 1), FakeRig)
-		local FLowerTorso = CreatePart("LowerTorso", Vector3New(2, 0.4, 1), FakeRig)
-		local FLeftUpperArm = CreatePart("LeftUpperArm", Vector3New(1, 1.169, 1), FakeRig)
-		local FLeftUpperLeg = CreatePart("LeftUpperLeg", Vector3New(1, 1.217, 1), FakeRig)
-		local FLeftFoot = CreatePart("LeftFoot", Vector3New(1, 0.3, 1), FakeRig)
-		local FLeftLowerArm = CreatePart("LeftLowerArm", Vector3New(1, 1.052, 1), FakeRig)
-		local FRightLowerArm = CreatePart("RightLowerArm", Vector3New(1, 1.052, 1), FakeRig)
-		local FRightLowerLeg = CreatePart("RightLowerLeg", Vector3New(1, 1.193, 1), FakeRig)
-		CreateJoint("RightAnkle", FRightLowerLeg, FRightFoot, CFrameNew(0, -0.546999991, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.101999998, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightFoot)
-		CreateJoint("RightHip", FLowerTorso, FRightUpperLeg, CFrameNew(0.5, -0.200000003, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.421000004, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperLeg)
-		CreateJoint("Waist", FLowerTorso, FUpperTorso, CFrameNew(-0, 0.200000003, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(-0, -0.800000012, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
-		CreateJoint("LeftElbow", FLeftUpperArm, FLeftLowerArm, CFrameNew(0, -0.333999991, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.259000003, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerArm)
-		CreateJoint("Root", FRoot, FLowerTorso, CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(-0, -0.200000003, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
-		CreateJoint("RightWrist", FRightLowerArm, FRightHand, CFrameNew(0, -0.500999987, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.125, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightHand)
-		CreateJoint("RightElbow", FRightUpperArm, FRightLowerArm, CFrameNew(-0, -0.333999991, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.259000003, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerArm)
-		CreateJoint("LeftHip", FLowerTorso, FLeftUpperLeg, CFrameNew(-0.5, -0.200000003, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.421000004, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperLeg)
-		CreateJoint("LeftWrist", FLeftLowerArm, FLeftHand, CFrameNew(0, -0.500999987, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.125, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftHand)
-		CreateJoint("Neck", FUpperTorso, FHead, CFrameNew(-0, 0.800000012, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, -0.490999997, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
-		CreateJoint("RightShoulder", FUpperTorso, FRightUpperArm, CFrameNew(1, 0.563000023, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(-0.5, 0.393999994, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperArm)
-		CreateJoint("RightKnee", FRightUpperLeg, FRightLowerLeg, CFrameNew(0, -0.400999993, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.379000008, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerLeg)
-		CreateJoint("LeftKnee", FLeftUpperLeg, FLeftLowerLeg, CFrameNew(0, -0.400999993, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.379000008, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerLeg)
-		CreateJoint("LeftShoulder", FUpperTorso, FLeftUpperArm, CFrameNew(-1, 0.563000023, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0.5, 0.393999994, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperArm)
-		CreateJoint("LeftAnkle", FLeftLowerLeg, FLeftFoot, CFrameNew(-0, -0.546999991, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(-0, 0.101999998, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftFoot)
-		CreateAttachment("RightHipRigAttachment", CFrameNew(0, 0.421, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperLeg)
-		CreateAttachment("RightKneeRigAttachment", CFrameNew(0, -0.400, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperLeg)
-		CreateAttachment("LeftElbowRigAttachment", CFrameNew(0, 0.259, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerArm)
-		CreateAttachment("LeftWristRigAttachment", CFrameNew(0, -0.500, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerArm)
-		CreateAttachment("LeftAnkleRigAttachment", CFrameNew(-0, 0.101, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftFoot)
-		CreateAttachment("FaceCenterAttachment", CFrameNew(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
-		CreateAttachment("FaceFrontAttachment", CFrameNew(0, 0, -0.6, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
-		CreateAttachment("HairAttachment", CFrameNew(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
-		CreateAttachment("HatAttachment", CFrameNew(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
-		CreateAttachment("NeckRigAttachment", CFrameNew(0, -0.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
-		CreateAttachment("LeftShoulderRigAttachment", CFrameNew(0.5, 0.393, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperArm)
-		CreateAttachment("LeftElbowRigAttachment", CFrameNew(0, -0.333, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperArm)
-		CreateAttachment("LeftShoulderAttachment", CFrameNew(0, 0.583, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperArm)
-		CreateAttachment("RootRigAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRoot)
-		CreateAttachment("RightAnkleRigAttachment", CFrameNew(0, 0.101, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightFoot)
-		CreateAttachment("RightElbowRigAttachment", CFrameNew(0, 0.259, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerArm)
-		CreateAttachment("RightWristRigAttachment", CFrameNew(0, -0.5, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerArm)
-		CreateAttachment("LeftWristRigAttachment", CFrameNew(0, 0.125, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftHand)
-		CreateAttachment("LeftGripAttachment", CFrameNew(0, -0.15, -0, 1, 0, 0, 0, 0, 1, 0, -1, 0), FLeftHand)
-		CreateAttachment("RightShoulderRigAttachment", CFrameNew(-0.5, 0.393, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperArm)
-		CreateAttachment("RightElbowRigAttachment", CFrameNew(-0, -0.333, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperArm)
-		CreateAttachment("RightShoulderAttachment", CFrameNew(-0, 0.583, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperArm)
-		CreateAttachment("WaistRigAttachment", CFrameNew(-0, -0.8, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
-		CreateAttachment("NeckRigAttachment", CFrameNew(-0, 0.8, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
-		CreateAttachment("LeftShoulderRigAttachment", CFrameNew(-1, 0.563, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
-		CreateAttachment("RightShoulderRigAttachment", CFrameNew(1, 0.563, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
-		CreateAttachment("BodyFrontAttachment", CFrameNew(-0, -0.200, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
-		CreateAttachment("BodyBackAttachment", CFrameNew(-0, -0.200, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
-		CreateAttachment("LeftCollarAttachment", CFrameNew(-1, 0.800, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
-		CreateAttachment("RightCollarAttachment", CFrameNew(1, 0.800, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
-		CreateAttachment("NeckAttachment", CFrameNew(-0, 0.800, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
-		CreateAttachment("RightKneeRigAttachment", CFrameNew(0, 0.379, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerLeg)
-		CreateAttachment("RightAnkleRigAttachment", CFrameNew(0, -0.547, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerLeg)
-		CreateAttachment("RootRigAttachment", CFrameNew(-0, -0.2, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
-		CreateAttachment("WaistRigAttachment", CFrameNew(-0, 0.2, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
-		CreateAttachment("LeftHipRigAttachment", CFrameNew(-0.5, -0.2, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
-		CreateAttachment("RightHipRigAttachment", CFrameNew(0.5, -0.2, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
-		CreateAttachment("WaistCenterAttachment", CFrameNew(-0, -0.2, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
-		CreateAttachment("WaistFrontAttachment", CFrameNew(-0, -0.2, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
-		CreateAttachment("WaistBackAttachment", CFrameNew(-0, -0.2, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
-		CreateAttachment("LeftKneeRigAttachment", CFrameNew(0, 0.379, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerLeg)
-		CreateAttachment("LeftAnkleRigAttachment", CFrameNew(-0, -0.546, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerLeg)
-		CreateAttachment("LeftHipRigAttachment", CFrameNew(0, 0.421, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperLeg)
-		CreateAttachment("LeftKneeRigAttachment", CFrameNew(0, -0.4, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperLeg)
-		CreateAttachment("RightWristRigAttachment", CFrameNew(0, 0.125, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightHand)
-		CreateAttachment("RightGripAttachment", CFrameNew(0, -0.15, -0, 1, 0, 0, 0, 0, 1, 0, -1, 0), FRightHand)
+		task.defer(function()
+			local FLeftHand = CreatePart("LeftHand", Vector3New(1, 0.3, 1), FakeRig)
+			local FRightFoot = CreatePart("RightFoot", Vector3New(1, 0.3, 1), FakeRig)
+			local FRightUpperArm = CreatePart("RightUpperArm", Vector3New(1, 1.169, 1), FakeRig)
+			local FRightUpperLeg = CreatePart("RightUpperLeg", Vector3New(1, 1.217, 1), FakeRig)
+			local FRightHand = CreatePart("RightHand", Vector3New(1, 0.3, 1), FakeRig)
+			local FLeftLowerLeg = CreatePart("LeftLowerLeg", Vector3New(1, 1.193, 1), FakeRig)
+			local FUpperTorso = CreatePart("UpperTorso", Vector3New(2, 1.6, 1), FakeRig)
+			local FLowerTorso = CreatePart("LowerTorso", Vector3New(2, 0.4, 1), FakeRig)
+			local FLeftUpperArm = CreatePart("LeftUpperArm", Vector3New(1, 1.169, 1), FakeRig)
+			local FLeftUpperLeg = CreatePart("LeftUpperLeg", Vector3New(1, 1.217, 1), FakeRig)
+			local FLeftFoot = CreatePart("LeftFoot", Vector3New(1, 0.3, 1), FakeRig)
+			local FLeftLowerArm = CreatePart("LeftLowerArm", Vector3New(1, 1.052, 1), FakeRig)
+			local FRightLowerArm = CreatePart("RightLowerArm", Vector3New(1, 1.052, 1), FakeRig)
+			local FRightLowerLeg = CreatePart("RightLowerLeg", Vector3New(1, 1.193, 1), FakeRig)
+			CreateJoint("RightAnkle", FRightLowerLeg, FRightFoot, CFrameNew(0, -0.546999991, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.101999998, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightFoot)
+			CreateJoint("RightHip", FLowerTorso, FRightUpperLeg, CFrameNew(0.5, -0.200000003, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.421000004, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperLeg)
+			CreateJoint("Waist", FLowerTorso, FUpperTorso, CFrameNew(-0, 0.200000003, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(-0, -0.800000012, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
+			CreateJoint("LeftElbow", FLeftUpperArm, FLeftLowerArm, CFrameNew(0, -0.333999991, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.259000003, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerArm)
+			CreateJoint("Root", FRoot, FLowerTorso, CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(-0, -0.200000003, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
+			CreateJoint("RightWrist", FRightLowerArm, FRightHand, CFrameNew(0, -0.500999987, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.125, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightHand)
+			CreateJoint("RightElbow", FRightUpperArm, FRightLowerArm, CFrameNew(-0, -0.333999991, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.259000003, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerArm)
+			CreateJoint("LeftHip", FLowerTorso, FLeftUpperLeg, CFrameNew(-0.5, -0.200000003, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.421000004, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperLeg)
+			CreateJoint("LeftWrist", FLeftLowerArm, FLeftHand, CFrameNew(0, -0.500999987, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.125, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftHand)
+			CreateJoint("Neck", FUpperTorso, FHead, CFrameNew(-0, 0.800000012, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, -0.490999997, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
+			CreateJoint("RightShoulder", FUpperTorso, FRightUpperArm, CFrameNew(1, 0.563000023, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(-0.5, 0.393999994, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperArm)
+			CreateJoint("RightKnee", FRightUpperLeg, FRightLowerLeg, CFrameNew(0, -0.400999993, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.379000008, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerLeg)
+			CreateJoint("LeftKnee", FLeftUpperLeg, FLeftLowerLeg, CFrameNew(0, -0.400999993, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0, 0.379000008, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerLeg)
+			CreateJoint("LeftShoulder", FUpperTorso, FLeftUpperArm, CFrameNew(-1, 0.563000023, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(0.5, 0.393999994, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperArm)
+			CreateJoint("LeftAnkle", FLeftLowerLeg, FLeftFoot, CFrameNew(-0, -0.546999991, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrameNew(-0, 0.101999998, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftFoot)
+			CreateAttachment("RightHipRigAttachment", CFrameNew(0, 0.421, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperLeg)
+			CreateAttachment("RightKneeRigAttachment", CFrameNew(0, -0.400, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperLeg)
+			CreateAttachment("LeftElbowRigAttachment", CFrameNew(0, 0.259, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerArm)
+			CreateAttachment("LeftWristRigAttachment", CFrameNew(0, -0.500, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerArm)
+			CreateAttachment("LeftAnkleRigAttachment", CFrameNew(-0, 0.101, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftFoot)
+			CreateAttachment("FaceCenterAttachment", CFrameNew(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
+			CreateAttachment("FaceFrontAttachment", CFrameNew(0, 0, -0.6, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
+			CreateAttachment("HairAttachment", CFrameNew(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
+			CreateAttachment("HatAttachment", CFrameNew(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
+			CreateAttachment("NeckRigAttachment", CFrameNew(0, -0.5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FHead)
+			CreateAttachment("LeftShoulderRigAttachment", CFrameNew(0.5, 0.393, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperArm)
+			CreateAttachment("LeftElbowRigAttachment", CFrameNew(0, -0.333, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperArm)
+			CreateAttachment("LeftShoulderAttachment", CFrameNew(0, 0.583, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperArm)
+			CreateAttachment("RootRigAttachment", CFrameNew(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRoot)
+			CreateAttachment("RightAnkleRigAttachment", CFrameNew(0, 0.101, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightFoot)
+			CreateAttachment("RightElbowRigAttachment", CFrameNew(0, 0.259, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerArm)
+			CreateAttachment("RightWristRigAttachment", CFrameNew(0, -0.5, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerArm)
+			CreateAttachment("LeftWristRigAttachment", CFrameNew(0, 0.125, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftHand)
+			CreateAttachment("LeftGripAttachment", CFrameNew(0, -0.15, -0, 1, 0, 0, 0, 0, 1, 0, -1, 0), FLeftHand)
+			CreateAttachment("RightShoulderRigAttachment", CFrameNew(-0.5, 0.393, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperArm)
+			CreateAttachment("RightElbowRigAttachment", CFrameNew(-0, -0.333, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperArm)
+			CreateAttachment("RightShoulderAttachment", CFrameNew(-0, 0.583, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightUpperArm)
+			CreateAttachment("WaistRigAttachment", CFrameNew(-0, -0.8, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
+			CreateAttachment("NeckRigAttachment", CFrameNew(-0, 0.8, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
+			CreateAttachment("LeftShoulderRigAttachment", CFrameNew(-1, 0.563, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
+			CreateAttachment("RightShoulderRigAttachment", CFrameNew(1, 0.563, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
+			CreateAttachment("BodyFrontAttachment", CFrameNew(-0, -0.200, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
+			CreateAttachment("BodyBackAttachment", CFrameNew(-0, -0.200, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
+			CreateAttachment("LeftCollarAttachment", CFrameNew(-1, 0.800, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
+			CreateAttachment("RightCollarAttachment", CFrameNew(1, 0.800, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
+			CreateAttachment("NeckAttachment", CFrameNew(-0, 0.800, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FUpperTorso)
+			CreateAttachment("RightKneeRigAttachment", CFrameNew(0, 0.379, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerLeg)
+			CreateAttachment("RightAnkleRigAttachment", CFrameNew(0, -0.547, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightLowerLeg)
+			CreateAttachment("RootRigAttachment", CFrameNew(-0, -0.2, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
+			CreateAttachment("WaistRigAttachment", CFrameNew(-0, 0.2, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
+			CreateAttachment("LeftHipRigAttachment", CFrameNew(-0.5, -0.2, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
+			CreateAttachment("RightHipRigAttachment", CFrameNew(0.5, -0.2, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
+			CreateAttachment("WaistCenterAttachment", CFrameNew(-0, -0.2, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
+			CreateAttachment("WaistFrontAttachment", CFrameNew(-0, -0.2, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
+			CreateAttachment("WaistBackAttachment", CFrameNew(-0, -0.2, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLowerTorso)
+			CreateAttachment("LeftKneeRigAttachment", CFrameNew(0, 0.379, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerLeg)
+			CreateAttachment("LeftAnkleRigAttachment", CFrameNew(-0, -0.546, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftLowerLeg)
+			CreateAttachment("LeftHipRigAttachment", CFrameNew(0, 0.421, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperLeg)
+			CreateAttachment("LeftKneeRigAttachment", CFrameNew(0, -0.4, -0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FLeftUpperLeg)
+			CreateAttachment("RightWristRigAttachment", CFrameNew(0, 0.125, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FRightHand)
+			CreateAttachment("RightGripAttachment", CFrameNew(0, -0.15, -0, 1, 0, 0, 0, 0, 1, 0, -1, 0), FRightHand)
+
+			local Face = NewInstance("Decal"); Face.Name = "face"; Face.Texture = "rbxasset://textures/face.png"; Face.Transparency = 1; Face.Parent = FHead
+			local HeadMesh = NewInstance("SpecialMesh"); HeadMesh.Scale = Vector3New(1.25, 1.25, 1.25); HeadMesh.Parent = FHead
+			local Animate = NewInstance("LocalScript"); Animate.Name = "Animate"; Animate.Parent = FakeRig
+			local Health = NewInstance("Script"); Health.Name = "Health"; Health.Parent = FakeRig
+		end)
 
 		local function ReplaceTableName(OldName, Name)
 			if Hats[OldName] then
@@ -361,11 +387,6 @@ do -- [[ Rig Creation ]] --
 		ReplaceTableName("Torso", "LowerTorso")
 	end
 
-	local Face = NewInstance("Decal"); Face.Name = "face"; Face.Texture = "rbxasset://textures/face.png"; Face.Transparency = 1; Face.Parent = FHead
-	local HeadMesh = NewInstance("SpecialMesh"); HeadMesh.Scale = Vector3New(1.25, 1.25, 1.25); HeadMesh.Parent = FHead
-	local Animate = NewInstance("LocalScript"); Animate.Name = "Animate"; Animate.Parent = FakeRig
-	local Health = NewInstance("Script"); Health.Name = "Health"; Health.Parent = FakeRig
-
 	RecreateHats(Descendants, {}, FakeRig)
 	FakeRigDescendants = FakeRig:GetDescendants()
 	Character.Archivable = true
@@ -376,11 +397,14 @@ end
 
 do -- [[ Events ]]
 	local HideChar = Settings.HideRealChar
+	local FlingMethod = Settings.FlingDuration
+	local Selected = typeof(FlingMethod) == "number" and "wait" or typeof(FlingMethod) == "string" and "hold"
 	local Fling = Settings.Fling
 	if HideChar then
 		HideChildren()
 	end
-
+	
+	print(Selected)
 	AutoRespawn = LocalPlayer.CharacterAdded:Connect(function()
 		Character = LocalPlayer.Character
 		TClear(UsedHats)
@@ -411,8 +435,14 @@ do -- [[ Events ]]
 				RootPart.RotVelocity = Vector3zero
 				RootPart.CFrame = FlingPart.CFrame
 			end)
+			
+			if Selected == "wait" then
+				Wait(Settings.FlingDuration)
+			else
+				repeat Wait() until MouseDown == false
+				Wait(0.25)
+			end
 
-			Wait(Settings.WaitTime)
 			Wait(PreSimulation:Wait() * PostSimulation:Wait())
 			TempEvent:Disconnect()
 			Highlight.Color3 = Color3.fromRGB(65, 255, 113)
@@ -424,7 +454,7 @@ do -- [[ Events ]]
 			RootPart.CFrame = ReturnCFrame
 		end)
 
-		Wait(Settings.WaitTime + 0.05)
+		Wait(Settings.WaitTime)
 		Wait(PreSimulation:Wait() * PostSimulation:Wait())
 
 		Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
@@ -482,21 +512,11 @@ do -- [[ Events ]]
 
 	if Fling and Settings.FlingOnLoad and FlingPart then
 		local FlingLockIn = Settings.FlingLockIn or false
-		local FlingingEvents = {}
-		local Mouse = LocalPlayer:GetMouse()
 		local CurrentTarget = nil
 		local TargetHumanoid = nil
-		local MouseDown = false
 		local DefaultOffset = CFrameNew(0, -100, 0)
 		FlingPart.Anchored = false
-		FlingingEvents[#FlingingEvents+1] = Mouse.Button1Down:Connect(function()
-			MouseDown = true
-		end)
-
-		FlingingEvents[#FlingingEvents+1] = Mouse.Button1Up:Connect(function()
-			MouseDown = false
-		end)
-
+		
 		local FlingFunction = function()
 			FlingPart.CFrame = Mouse.hit
 		end
@@ -537,7 +557,11 @@ do -- [[ Stop Events ]] --
 		Main:Disconnect()
 		AutoRespawn:Disconnect()
 		Noclip:Disconnect()
-
+		
+		for _, v in next, FlingingEvents do
+			v:Disconnect()
+		end
+		
 		Camera.CameraSubject = Humanoid
 		LocalPlayer.Character = Character
 		FakeRig:Destroy()
@@ -570,8 +594,9 @@ do -- [[ Stop Events ]] --
 end
 
 if Settings.DebugPrints then
-	warn("Time Elapsed:", tick()-Tick)
+	warn("Time Elapsed:", Clock()-Tick)
 end
+
 
 StartTheHats()
 
