@@ -497,7 +497,7 @@ local function get_flingy()  -- system brrrrrrrr flinging
 	local temp2             = nil
 	local offset            = cf_zero
 	local velocity          = high_vel
-
+	local kidfriendly       = not sex and 3 or 0.5
 	if sex and humanoid.Parent then -- had to look at iy because idk the anims so uh sorry if it seems skiddy anyway credit to inf yield for the anim n shit
 		local bang_anim = Instance.new("Animation")
 		bang_anim.AnimationId = humanoid.RigType.Name == "R15" and "rbxassetid://5918726674" or "rbxassetid://148840371"
@@ -523,7 +523,7 @@ local function get_flingy()  -- system brrrrrrrr flinging
 			end
 		end
 		
-		offset = cf_new(0, 0, 1 + 0.5 * mt_sin(os_clock()*50))
+		offset = cf_new(0, 0, 1 + kidfriendly * mt_sin(os_clock()*50))
 	end)
 
 	temp = post_sim:Connect(function() -- better cframe first for hrp.
