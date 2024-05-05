@@ -1,4 +1,4 @@
--- [[ Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ ]] --
+-- [[ Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | 1.0.0 ]] --
 local mt_rad      = math.rad
 local tb_clear    = table.clear
 local ts_delay    = task.delay
