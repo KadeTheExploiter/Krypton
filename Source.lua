@@ -1,4 +1,4 @@
--- [[ Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.1.0 ]] --
+-- [[ Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.0.1 ]] --
 local str_sub     = string.sub
 local mt_rad      = math.rad
 local tb_insert   = table.insert
@@ -21,7 +21,7 @@ local global      = getfenv(0)
 local config      = global.Kade_Config or {}
 global.Rig        = nil
 
---[[ if your first title in brawl stars was "CEO of brawl Stars" please kill yourself immediately ]]--
+-- if your first title in brawl stars was "CEO of brawl Stars" please kill yourself immediately
 local rig_name      = config.rig_name or "FakeRig" -- sets name for the rig
 local animations    = config.animations or false -- enables base rig animations
 local no_scripts    = config.no_scripts or false -- disables localscripts in your character every respawn
@@ -37,40 +37,40 @@ local radius_val    = config.radius_val or 10    -- radius to keep real rig's aw
 local deathpoint    = config.deathpoint or true    -- tps you back to the same place when you stopped the reanimate
 local tp_radius     = config.tp_radius or 25    -- teleport radius around rootpart| rig_root_part * cframe.new(math.random(-tp_radius, tp_radius), 0, math.random(-tp_radius, tp_radius))
 local limbs         = config.limbs or {       -- hats used for limbs replacement for the rig  (default hats below)
-    ["Right Arm"] = { -- Right Arm
+	["Right Arm"] = { -- Right Arm
 		name = "RARM",
-        texture = "rbxassetid://14255544465",
-        mesh = "rbxassetid://14255522247",
-        offset = cf_angle(0, 0, mt_rad(90))
-    }, -- Right Arm
-    
-    ["Left Arm"] = { -- Left Arm
+		texture = "rbxassetid://14255544465",
+		mesh = "rbxassetid://14255522247",
+		offset = cf_angle(0, 0, mt_rad(90))
+	}, -- Right Arm
+ 
+	["Left Arm"] = { -- Left Arm
 		name = "LARM",
-        texture = "rbxassetid://14255544465", 
-        mesh = "rbxassetid://14255522247",
-        offset = cf_angle(0, 0, mt_rad(90))
-    }, -- Left Arm
+		texture = "rbxassetid://14255544465", 
+		mesh = "rbxassetid://14255522247",
+		offset = cf_angle(0, 0, mt_rad(90))
+	}, -- Left Arm
 
-    ["Right Leg"] = { -- Right Leg
+	["Right Leg"] = { -- Right Leg
 		name = "Accessory (RARM)",
-        texture = "rbxassetid://17374768001", 
-        mesh = "rbxassetid://17374767929",
-        offset = cf_angle(0, 0, mt_rad(90))
-    }, -- Right Leg
+		texture = "rbxassetid://17374768001", 
+		mesh = "rbxassetid://17374767929",
+		offset = cf_angle(0, 0, mt_rad(90))
+	}, -- Right Leg
 
     ["Left Leg"] = { -- Left Leg
 		name = "Accessory (LARM)",
-        texture = "rbxassetid://17374768001", 
-        mesh = "rbxassetid://17374767929",
-        offset = cf_angle(0, 0, mt_rad(90))
-    }, -- Left Leg
+		texture = "rbxassetid://17374768001", 
+		mesh = "rbxassetid://17374767929",
+		offset = cf_angle(0, 0, mt_rad(90))
+	}, -- Left Leg
 
-    ["Torso"] = { -- Torso
+	["Torso"] = { -- Torso
 		name = "MeshPartAccessory",
-        texture = "rbxassetid://13415110780", 
-        mesh = "rbxassetid://13421774668",
-        offset = cf_zero
-    }, -- Torso
+		texture = "rbxassetid://13415110780", 
+		mesh = "rbxassetid://13421774668",
+		offset = cf_zero
+	}, -- Torso
 }
 
 local enum_keycode   = Enum.KeyCode
