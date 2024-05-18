@@ -1,4 +1,4 @@
--- [[ Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.0.1 ]] --
+-- [[ Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.1.0 ]] --
 local str_sub     = string.sub
 local mt_rad      = math.rad
 local tb_insert   = table.insert
@@ -23,12 +23,12 @@ global.Rig        = nil
 
 -- if your first title in brawl stars was "CEO of brawl Stars" please kill yourself immediately
 local rig_name      = config.rig_name or "FakeRig" -- sets name for the rig
-local animations    = config.animations or false -- enables base rig animations
+local animations    = config.animations or true -- enables base rig animations
 local no_scripts    = config.no_scripts or false -- disables localscripts in your character every respawn
 local set_sim_rad   = config.set_sim_rad or false  -- sets simulationradius to maximum on load
 local no_collisions = config.no_collisions or false  -- basically noclip for the fakerig
-local flinging      = config.flinging or false -- uses your real char as a fling, will delay slightly autorespawning
-local preset_fling  = config.preset_fling or false  -- uses built in fling system (needs fling enabled)
+local flinging      = config.flinging or true -- uses your real char as a fling, will delay slightly autorespawning
+local preset_fling  = config.preset_fling or true  -- uses built in fling system (needs fling enabled)
 local sex           = config.sex or false  -- buttfucks target for fling (needs preset_fling enabled)
 local tpless        = config.tpless or false  -- wont tp your character. resets instantly. might be unstable.
 local anti_void     = config.anti_void or false  -- avoid being kicked into void
@@ -1020,7 +1020,7 @@ local function postsimulation_event() -- Hat System.
 				if targethum and targethum.MoveDirection.Magnitude > 0.25 then
 					fling_part.CFrame = target.CFrame * cf_new(targethum.MoveDirection * targethum.WalkSpeed/2)
 				else
-					fling_part.CFrame = target.CFrame * target.Velocity.Magnitude > 6 and cf_new(target.AssemblyLinearVelocity / 8) or cf_zero
+					fling_part.CFrame = target.CFrame
 				end
 			else
 				fling_part.CFrame = is_mouse_down and mouse.hit or cf_zero
