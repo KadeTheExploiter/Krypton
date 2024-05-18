@@ -21,7 +21,7 @@ local global      = getfenv(0)
 local config      = global.Kade_Config or {}
 global.Rig        = nil
 
---[[ if your first title in brawl stars was "CEO of brawl Stars" please kill yourself immediately ]]
+--[[ if your first title in brawl stars was "CEO of brawl Stars" please kill yourself immediately ]]--
 local rig_name      = config.rig_name or "FakeRig" -- sets name for the rig
 local animations    = config.animations or false -- enables base rig animations
 local no_scripts    = config.no_scripts or false -- disables localscripts in your character every respawn
