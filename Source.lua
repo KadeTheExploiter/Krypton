@@ -1,4 +1,4 @@
---[[ Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.0.1 ]] --
+--[[ Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.0.1 ]]--
 local str_sub     = string.sub
 local mt_rad      = math.rad
 local tb_insert   = table.insert
@@ -995,7 +995,7 @@ local function characteradded_event() -- Automatically respawns the player.
 end
 
 local function send_the_fling(position)
-	if not preset_fling and fling_part:IsDescendantOf(game) then
+	if not preset_fling and fling and fling_part:IsDescendantOf(game) then
 		fling_part.AssemblyLinearVelocity = v3_zero
 		fling_part.CFrame = position
 	end
