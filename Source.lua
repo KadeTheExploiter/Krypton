@@ -1,4 +1,4 @@
--- [[ Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.1.0 ]] --
+--[[ Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.0.1 ]] --
 local str_sub     = string.sub
 local mt_rad      = math.rad
 local tb_insert   = table.insert
@@ -22,8 +22,9 @@ local config      = global.Kade_Config or {}
 global.Rig        = nil
 
 -- if your first title in brawl stars was "CEO of brawl Stars" please kill yourself immediately
+
 local rig_name      = config.rig_name or "FakeRig" -- sets name for the rig
-local animations    = config.animations or true -- enables base rig animations
+local animations    = config.animations or false -- enables base rig animations
 local no_scripts    = config.no_scripts or false -- disables localscripts in your character every respawn
 local set_sim_rad   = config.set_sim_rad or false  -- sets simulationradius to maximum on load
 local no_collisions = config.no_collisions or false  -- basically noclip for the fakerig
@@ -46,28 +47,28 @@ local limbs         = config.limbs or {       -- hats used for limbs replacement
  
 	["Left Arm"] = { -- Left Arm
 		name = "LARM",
-		texture = "rbxassetid://14255544465", 
+		texture = "rbxassetid://14255544465",
 		mesh = "rbxassetid://14255522247",
 		offset = cf_angle(0, 0, mt_rad(90))
 	}, -- Left Arm
 
 	["Right Leg"] = { -- Right Leg
 		name = "Accessory (RARM)",
-		texture = "rbxassetid://17374768001", 
+		texture = "rbxassetid://17374768001",
 		mesh = "rbxassetid://17374767929",
 		offset = cf_angle(0, 0, mt_rad(90))
 	}, -- Right Leg
 
     ["Left Leg"] = { -- Left Leg
 		name = "Accessory (LARM)",
-		texture = "rbxassetid://17374768001", 
+		texture = "rbxassetid://17374768001",
 		mesh = "rbxassetid://17374767929",
 		offset = cf_angle(0, 0, mt_rad(90))
 	}, -- Left Leg
 
 	["Torso"] = { -- Torso
 		name = "MeshPartAccessory",
-		texture = "rbxassetid://13415110780", 
+		texture = "rbxassetid://13415110780",
 		mesh = "rbxassetid://13421774668",
 		offset = cf_zero
 	}, -- Torso
@@ -385,8 +386,6 @@ end
 
 local return_cf  = spawnpoint and spawnpoint.CFrame * cf_new(0,20,0) or hrp.CFrame
 local rig_hrp, rig_hum, rig_descendants
-
-
 
 local rig = in_new("Model"); do -- Scoping to make it look nice.
 	rig_hum  = in_new("Humanoid")
@@ -995,10 +994,17 @@ local function characteradded_event() -- Automatically respawns the player.
 	write_hats_to_table(descendants, rig_descendants, rig)
 end
 
+local function send_the_fling(position)
+	if not preset_fling and fling_part:IsDescendantOf(game) then
+		fling_part.AssemblyLinearVelocity = v3_zero
+		fling_part.CFrame = position
+	end
+end
+
 local function postsimulation_event() -- Hat System.
 	if set_sim_rad then
 		player.MaximumSimulationRadius = 32768
-		player.SimulationRadius        = 32768	
+		player.SimulationRadius        = 32768
 	end
 
 	for _, data in next, hats do
@@ -1009,16 +1015,24 @@ local function postsimulation_event() -- Hat System.
 		cframe_link_parts(handle, part1, offset * no_sleep_cf)
 	end
 
-	if preset_fling and fling_part and fling_part.Parent then
+	for _, part in next, descendants do
+		if part:IsA("BasePart") then
+			part.CanCollide = false
+			part.CanQuery = false
+			part.CanTouch = false
+		end
+	end
+
+	if fling_part and preset_fling then
 		fling_part.AssemblyLinearVelocity = v3_zero
 
 		if is_mouse_down then
 			target = mouse.Target.Parent and mouse.Target.Parent:FindFirstChildOfClass("Part") or mouse.Target.Parent.Parent and mouse.Target.Parent.Parent:FindFirstChildOfClass("Part")
 			if target and target.Name == "HumanoidRootPart" or target.Name == "Head" or target.Name == "Handle" then
-				targethum = target.Parent:FindFirstChildOfClass("Humanoid") or target.Parent.Parent:FindFirstChildOfClass("Humanoid")
-
+				targethum = target.Parent and target.Parent:FindFirstChildOfClass("Humanoid") or target.Parent and target.Parent.Parent:FindFirstChildOfClass("Humanoid")
+	
 				if targethum and targethum.MoveDirection.Magnitude > 0.25 then
-					fling_part.CFrame = target.CFrame * cf_new(targethum.MoveDirection * targethum.WalkSpeed/2)
+					fling_part.CFrame = target.CFrame * cf_new(targethum.MoveDirection * targethum.WalkSpeed/1.5) * cf_new(0,mt_random(-2,2),0)
 				else
 					fling_part.CFrame = target.CFrame
 				end
@@ -1130,4 +1144,4 @@ write_hats_to_table(descendants, rig_descendants, rig)
 rig_hum:ChangeState(state_getup)
 rig_hum:ChangeState(state_landed)
 
-return {rig, fling_part} -- unanchor fling_part to use.
+return {rig, fling_part, disable_script, send_the_fling}
