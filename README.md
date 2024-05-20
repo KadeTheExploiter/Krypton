@@ -86,4 +86,4 @@ r_settings.sex = false -- buttfucks target for fling (needs preset_fling enabled
 
 
 # Discord Server:
-  - https://discord.gg/A7VexVaZDA
+  - [https://discord.gg/A7VexVaZDA](https://discord.gg/ArpG4kDvW2 )
