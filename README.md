@@ -1,7 +1,31 @@
 # Krypton Reanimator
 - Krypton, is a Roblox Reanimation script, The purpose of reanimations is to replicate client's animations to server.
 
+# Basic Script Info.
+
+```lua
+--[[ 
+    [ Kade's Reanimate ]
+
+    Another Krypton's Rewrite.
+    Custom Movement Inspired by Mizt.
+
+    Default hats: [ 17374846953, 14255560646, 14255562939, 13421786478, 17374851733]
+    - https://www.roblox.com/catalog/17374846953/Extra-Right-Black-Arm
+    - https://www.roblox.com/catalog/14255560646/Extra-Left-Tan-Arm
+    - https://www.roblox.com/catalog/14255562939/Extra-Right-Tan-Arm
+    - https://www.roblox.com/catalog/13421786478/Extra-Torso-Blocky
+    - https://www.roblox.com/catalog/17374851733/Extra-Left-Black-Arm
+
+    Settings are likes few lines below.
+
+    Returns a table, {Rig, FlingPart}
+    Also sets a global.Rig to the fake character.
+]]
+```
+
 # Loadstring Module, for easier execution.
+
 ```lua
 local r_settings  = {}
 local global      = getfenv(0)
@@ -64,7 +88,8 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Kryp
 ```
 
 # Documentation:
-```
+
+```lua
 r_settings.rig_name      = "FakeRig" -- sets name for the rig
 r_settings.no_scripts    = false -- disables localscripts in your character every respawn
 r_settings.set_sim_rad   = false  -- sets simulationradius to maximum on load -- not sethiddenproperty way so if you arent using incognito or simillar exploits keep that off 
