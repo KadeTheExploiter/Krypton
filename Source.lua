@@ -10,7 +10,7 @@ local string   = string
 local Vector3  = Vector3
 local CFrame   = CFrame
 
-local main_edgar  = true -- toggle this for funny, works only for incognito
+local main_edgar  = false -- toggle this for funny, works only for incognito
 local os_clock    = os and os.clock or tick
 
 local str_sub     = string.sub
