@@ -10,7 +10,7 @@ local string   = string
 local Vector3  = Vector3
 local CFrame   = CFrame
 
-local main_edgar  = false -- toggle this for funny, works only for incognito
+local main_edgar  = true -- toggle this for funny, works only for incognito
 local os_clock    = os and os.clock or tick
 
 local str_sub     = string.sub
@@ -29,7 +29,7 @@ local mt_root     = math.sqrt
 local pcall       = pcall
 
 local fakecref    = function(x) return x end
-local whatexec    = getexecutorname or function() return "localstring"
+local whatexec    = getexecutorname or function() return "localscript" end
 local isincognito = whatexec():find("incognito") and true or false
 local shp         = sethiddenproperty or function(a,b,c) a[b]=c end -- sethidprop
 local saferef     = (isincognito and fakecref) or cloneref or fakecref -- security
