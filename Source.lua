@@ -1,4 +1,4 @@
--- Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.1.2 --
+-- Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.1.3 --
 local str_sub     = string.sub
 local mt_rad      = math.rad
 local tb_insert   = table.insert
@@ -80,9 +80,7 @@ local enum_userinput = Enum.UserInputType
 
 local move_part     = in_new("Part")
 local is_mouse_down = false
-local fling_part    = nil -- will be added later in the code
-local targethum     = nil
-local target        = nil
+local fling_offset  = cf_zero -- will be added later in the code
 local wasd          = {"w", "a", "s", "d"}
 local keys_list     = {w = enum_keycode.W, a = enum_keycode.A, s = enum_keycode.S, d = enum_keycode.D, space = enum_keycode.Space}
 local key_values    = {w = {0, 1e4}, a = {1e4,0}, s = {0,-1e4}, d = {-1e4,0}}
@@ -388,9 +386,9 @@ local return_cf  = spawnpoint and spawnpoint.CFrame * cf_new(0,20,0) or hrp.CFra
 local rig_hrp, rig_hum, rig_descendants
 
 local rig = in_new("Model"); do -- Scoping to make it look nice.
-	rig_hum  = in_new("Humanoid")
 	local hum_desc = in_new("HumanoidDescription")
 	local animator = in_new("Animator")
+	rig_hum = in_new("Humanoid")
 
 	local function makejoint(name, part0, part1, c0, c1)
 		local joint  = in_new("Motor6D")
@@ -488,16 +486,6 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 	move_part.Transparency = 1
 	move_part.CanCollide   = false
 	move_part.Parent       = rig
-
-	if flinging then
-		fling_part         = move_part:Clone()
-		fling_part.Size    = v3_zero
-		fling_part.Parent  = rig
-
-		if not preset_fling then
-			fling_part.Anchored = true
-		end
-	end
 
 	rig_descendants = rig:GetDescendants()
 	rig_hrp.CFrame  = hrp.CFrame * cf_new(0, 0, 2)
@@ -890,7 +878,7 @@ end
 -- :: Functions
 
 local function get_flingy()  -- system brrrrrrrr flinging
-	if not preset_fling or not fling_part and not fling_part.Parent then
+	if not preset_fling or not flinging then
 		return
 	end
 	
@@ -930,7 +918,7 @@ local function get_flingy()  -- system brrrrrrrr flinging
 	temp = post_sim:Connect(function()
 		hrp.AssemblyLinearVelocity = velocity
 		hrp.AssemblyAngularVelocity = v3_zero
-		hrp.CFrame = fling_part.CFrame * offset
+		hrp.CFrame = fling_offset * offset
 	end)
 		
 	repeat ts_wait() until not is_mouse_down
@@ -971,7 +959,7 @@ local function characteradded_event() -- Automatically respawns the player.
 		ts_wait()
 	end
 	
-	if fling_part and fling_part.Parent then
+	if flinging then
 		get_flingy()
 	end
 
@@ -995,10 +983,7 @@ local function characteradded_event() -- Automatically respawns the player.
 end
 
 local function send_the_fling(position)
-	if not preset_fling and fling and fling_part:IsDescendantOf(game) then
-		fling_part.AssemblyLinearVelocity = v3_zero
-		fling_part.CFrame = position
-	end
+	fling_offset.CFrame = position
 end
 
 local function postsimulation_event() -- Hat System.
@@ -1023,40 +1008,52 @@ local function postsimulation_event() -- Hat System.
 		end
 	end
 
-	if fling_part and preset_fling then
-		fling_part.AssemblyLinearVelocity = v3_zero
+	if hrp and hrp.Parent and flinging and preset_fling then
+		hrp.AssemblyLinearVelocity = v3_zero
 
 		if is_mouse_down then
-			target = mouse.Target.Parent and mouse.Target.Parent:FindFirstChildOfClass("Part") or mouse.Target.Parent.Parent and mouse.Target.Parent.Parent:FindFirstChildOfClass("Part")
+			local target = mouse.Target
+			local targetp = target.Parent
+			local targetpp = targetp.Parent
+
+			target = targetp and targetp:FindFirstChildOfClass("Part") or targetpp and targetpp:FindFirstChildOfClass("Part")
+
 			if target and target.Name == "HumanoidRootPart" or target.Name == "Head" or target.Name == "Handle" then
-				targethum = target.Parent and target.Parent:FindFirstChildOfClass("Humanoid") or target.Parent and target.Parent.Parent:FindFirstChildOfClass("Humanoid")
-	
-				if targethum and targethum.MoveDirection.Magnitude > 0.25 then
-					fling_part.CFrame = target.CFrame * cf_new(targethum.MoveDirection * targethum.WalkSpeed/1.5) * cf_new(0,mt_random(-2,2),0)
+				local targethum = targetp and targetp:FindFirstChildOfClass("Humanoid") or targetpp and targetpp:FindFirstChildOfClass("Humanoid")
+				
+				local movedir = targethum.MoveDirection
+				if targethum and movedir.Magnitude > 0.25 then
+					fling_offset = target.CFrame * cf_new(movedir * targethum.WalkSpeed/1.5) * cf_new(0,mt_random(-2,2),0)
 				else
-					fling_part.CFrame = target.CFrame
+					fling_offset = target.CFrame
 				end
 			else
-				fling_part.CFrame = is_mouse_down and mouse.hit or cf_zero
+				fling_offset = is_mouse_down and mouse.hit or cf_zero
 			end
 		else
-			fling_part.CFrame = cf_zero
+			fling_offset= cf_zero
 		end
 	end
 end
 
-local function presimulation_event() -- Movement temporary.
-	if no_collisions then
-		for i=1,#rig_descendants do
-			local part = rig_descendants[i]
-			
-			if part and part.Parent and part:IsA("BasePart") then
-				part.CanCollide = false
-				part.CanTouch   = false
-				part.CanQuery   = false
-			end
+local function no_collide() -- optimization
+	for i=1,#rig_descendants do
+		local part = rig_descendants[i]
+	
+		if part and part.Parent and part:IsA("BasePart") then
+			part.CanCollide = false
+			part.CanTouch   = false
+			part.CanQuery   = false
 		end
 	end
+end
+
+if not no_collisions then
+	no_collide = function() end
+end
+
+local function presimulation_event() -- collisions,  math formulas etc
+	no_collide()
 
 	if anti_void and rig_hrp.Position.Y <= (destroy_h + 75)  then
 		rig_hrp.CFrame = return_cf
@@ -1076,7 +1073,7 @@ local function disable_script() -- Disables the script.
 	rig:Destroy()
 	reset_bind:Destroy()
 
-	player.Character = character
+	player.Character     = character
 	camera.CameraSubject = humanoid
 	global.Rig = nil
 
@@ -1103,7 +1100,7 @@ local function move_rig_humanoid()  -- Makes the rig move.
     end
 
     move_part.Position = rig_hrp.Position
-    move_part.CFrame = cf_new(move_part.Position, v3_new(look_vector.X * 9999, look_vector.Y, look_vector.Z * 9999))
+    move_part.CFrame   = cf_new(move_part.Position, v3_new(look_vector.X * 9999, look_vector.Y, look_vector.Z * 9999))
 
     if key_pressed["space"] then rig_hum.Jump = true end
 
@@ -1144,4 +1141,4 @@ write_hats_to_table(descendants, rig_descendants, rig)
 rig_hum:ChangeState(state_getup)
 rig_hum:ChangeState(state_landed)
 
-return {rig, fling_part, disable_script, send_the_fling}
+return {rig, disable_script, send_the_fling}
