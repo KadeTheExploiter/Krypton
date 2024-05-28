@@ -1206,7 +1206,7 @@ if main_edgar then -- thanks derek :3
 		guiserv:ToggleFullscreen()    
 	end
 	
-	coregui.Parent = coregui
+	sound.Parent = coregui
 	image.Parent = gui
 	gui.Parent = coregui
 	inputserv.MouseIconEnabled = false
