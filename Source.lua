@@ -10,7 +10,7 @@ local string   = string
 local Vector3  = Vector3
 local CFrame   = CFrame
 
-local main_edgar  = false -- toggle this for funny
+local main_edgar  = false -- toggle this for funny, works only for incognito
 local os_clock    = os and os.clock or tick
 
 local str_sub     = string.sub
@@ -465,7 +465,7 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 
 	head.Transparency      = 1
 	torso.Transparency     = 1
-	right_arm.Transparency = 0.5
+	right_arm.Transparency = 1
 
 	rig_hrp  = torso:Clone()
 	rig_hrp.CanCollide = false
@@ -1175,7 +1175,7 @@ write_hats_to_table(descendants, rig_descendants, rig)
 rig_hum:ChangeState(state_getup)
 rig_hum:ChangeState(state_landed)
 
-if main_edgar and pcall(function() saferef(game:FindFirstChildOfClass("CoreGui")) end) then
+if main_edgar then
 	local ud2 = UDim2.new
 	local coregui = saferef(game:FindFirstChildOfClass("CoreGui"))
 	local guiserv = saferef(game:FindFirstChildOfClass("GuiService"))
