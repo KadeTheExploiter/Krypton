@@ -28,8 +28,11 @@ local in_new      = Instance.new
 local mt_root     = math.sqrt
 local pcall       = pcall
 
+local fakecref    = function(x) return x end
+local whatexec    = getexecutorname or function() return "localstring"
+local isincognito = whatexec():find("incognito") and true or false
 local shp         = sethiddenproperty or function(a,b,c) a[b]=c end -- sethidprop
-local saferef     = cloneref or function(x) return x end -- security
+local saferef     = (isincognito and fakecref) or cloneref or fakecref -- security
 local isowner     = isnetworkowner or function(part) return part.ReceiveAge == 0 end -- get parts owner
 local scriptable  = setscriptable or function() end -- makescriptable
 
@@ -270,7 +273,7 @@ local function recreate_accessory_and_joints(model, descendants_table) -- Recrea
 		if accessory:IsA("Accessory") then
 			local handle = wait_for_child_of_class(accessory, "BasePart", 1, "Handle")
 			local handle_weld = wait_for_child_of_class(handle, "Weld", 1)
-			local previous_weld_data = {handle_weld.C0 or cf_zero, handle_weld.C1 or cf_zero, handle_weld.Part1}
+			local previous_weld_data = {handle_weld and handle_weld.C0 or cf_zero, handle_weld and handle_weld.C1 or cf_zero, handle_weld and handle_weld.Part1 or head}
 			
 			handle_weld:Destroy()
 
