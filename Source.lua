@@ -1,12 +1,20 @@
--- Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.1.3 --
+-- Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.2.0 --
+-- task lib related funcs have been moved to runservice related 
+-- optimization sigma
+
+local config   = kade_conf or Kade_Config or {}
+local os       = os
+local task     = task
+local math     = math
+local string   = string
+local Vector3  = Vector3
+local CFrame   = CFrame
+
+local main_edgar  = false -- toggle this for funny
+local os_clock    = os and os.clock or tick
+
 local str_sub     = string.sub
 local mt_rad      = math.rad
-local tb_insert   = table.insert
-local tb_clear    = table.clear
-local ts_spawn    = task.spawn
-local ts_delay    = task.delay
-local ts_wait     = task.wait
-local os_clock    = os.clock
 local mt_cos      = math.cos
 local mt_sin      = math.sin
 local mt_random   = math.random
@@ -17,11 +25,17 @@ local v3_new      = Vector3.new
 local v3_zero     = Vector3.zero
 local r3_new      = Region3.new
 local in_new      = Instance.new
-local global      = getfenv(0)
-local config      = global.Kade_Config or {}
-global.Rig        = nil
+local mt_root     = math.sqrt
+local pcall       = pcall
 
--- if your first title in brawl stars was "CEO of brawl Stars" please kill yourself immediately
+local shp         = sethiddenproperty or function(a,b,c) a[b]=c end -- sethidprop
+local saferef     = cloneref or function(x) return x end -- security
+local isowner     = isnetworkowner or function(part) return part.ReceiveAge == 0 end -- get parts owner
+local scriptable  = setscriptable or function() end -- makescriptable
+
+local global      = (getgenv and getgenv()) or getfenv(0)
+local game        = workspace.Parent
+global.Rig        = nil
 
 local rig_name      = config.rig_name or "FakeRig" -- sets name for the rig
 local animations    = config.animations or false -- enables base rig animations
@@ -78,20 +92,19 @@ local enum_keycode   = Enum.KeyCode
 local enum_humstate  = Enum.HumanoidStateType
 local enum_userinput = Enum.UserInputType
 
-local move_part     = in_new("Part")
 local is_mouse_down = false
-local fling_offset  = cf_zero -- will be added later in the code
-local wasd          = {"w", "a", "s", "d"}
+local fake_offset   = cf_zero -- linked to movement
+local walk_offset   = cf_zero
+local fling_offset  = cf_zero
 local keys_list     = {w = enum_keycode.W, a = enum_keycode.A, s = enum_keycode.S, d = enum_keycode.D, space = enum_keycode.Space}
 local key_values    = {w = {0, 1e4}, a = {1e4,0}, s = {0,-1e4}, d = {-1e4,0}}
 local key_pressed   = {w = false, a = false, s = false, d = false, space = false}
+local def_mov_vals  = {0,0} -- default moving values
+local cur_movement  = def_mov_vals
 
 local state_dead    = enum_humstate.Dead
 local state_getup   = enum_humstate.GettingUp
 local state_landed  = enum_humstate.Landed
-
-local clonereference       = cloneref or function(x) return x end -- security
-local return_network_owner = isnetworkowner or function(part) return part.ReceiveAge == 0 end -- get parts owner
 
 -- :: Begin
 
@@ -104,15 +117,23 @@ local sin_value      =  0  -- random value, needed for dynamical velocity
 local rbx_signals    =  {} -- roblox signals stored in table for easy removal                                                      {event, event, ...}
 local hats           =  {} -- Hats that need for the rig to work, such as extra limb accessory.                                    {handle, part1, cframe}
 local reset_bind     =  in_new("BindableEvent") -- bindable event for disabling the script.
-local mousebutton1   =  enum_userinput.MouseButton1
+local mousebutton1   =  enum_userinput.MouseButton1 -- check optimization
 
 -- ; Datamodel Variables
 
-local workspace  = clonereference(game:FindFirstChildOfClass("Workspace"))
-local players    = clonereference(game:FindFirstChildOfClass("Players"))
-local runservice = clonereference(game:FindFirstChildOfClass("RunService"))
-local startgui   = clonereference(game:FindFirstChildOfClass("StarterGui"))
-local inputserv  = clonereference(game:FindFirstChildOfClass("UserInputService"))
+
+local workspace  = saferef(game:FindFirstChildOfClass("Workspace"))
+local players    = saferef(game:FindFirstChildOfClass("Players"))
+local runservice = saferef(game:FindFirstChildOfClass("RunService"))
+local startgui   = saferef(game:FindFirstChildOfClass("StarterGui"))
+local inputserv  = saferef(game:FindFirstChildOfClass("UserInputService"))
+
+local pre_sim     = runservice.PreSimulation
+local post_sim    = runservice.PostSimulation
+
+local ts_spawn    = task and task.spawn or spawn
+local ts_delay    = task and task.delay or delay
+local ts_wait     = task and task.wait or post_sim.Wait 
 
 rbx_signals[#rbx_signals+1] = inputserv.InputBegan:Connect(function(input, out_of_focus)
 	for i, v in next, keys_list do
@@ -152,11 +173,13 @@ local function disable_localscripts(descendants_table)
 	end
 end
 
-local function call_move_part(humanoid, positions)        -- calls moving on a humanoid
-	local x, z = positions[1], positions[2]
-	move_part.CFrame = move_part.CFrame * cf_new(-x, 0,-z)
-
-	humanoid.WalkToPoint = move_part.Position
+local function call_move_part(humanoid)        -- calls moving on a humanoid
+	local x, z = cur_movement[1], cur_movement[2]
+	walk_offset = walk_offset * cf_new(-x, 0,-z).Position
+	
+	if humanoid and humanoid:IsDescendantOf(workspace) then
+		humanoid.WalkToPoint = walk_offset
+	end
 end
 
 local function ffcoc_and_name(parent, classname, name)     -- findfirstchildofclass with name check
@@ -174,11 +197,11 @@ end
 
 local function wait_for_child_of_class(parent, classname, timeout, name)     -- waitforchildofclass, nothing else to add, 4th arg is name check
 	local check        = name and true
-	local time         = timeout or 1
+	local yield        = timeout or 1
 	local timed_out    = false
 	local return_value = nil
 
-	ts_delay(time, function()
+	ts_delay(yield, function()
 		if not ffcoc_and_name(parent, classname, name) then
 			timed_out = true
 		end
@@ -303,7 +326,6 @@ local function write_hats_to_table(descendants_table, fake_descendants_table, fa
 				texture_id  = mesh.TextureId
 				mesh_id     = mesh.MeshId
 			end
-		
 
 			local fake_handle = find_accessory(fake_descendants_table, handle.Parent.Name, mesh_id, texture_id)
 
@@ -318,7 +340,6 @@ local function write_hats_to_table(descendants_table, fake_descendants_table, fa
 					end
 				end
 			end
-
 			
 			if fake_handle then
 				hats[#hats+1] = {handle, fake_handle}
@@ -333,7 +354,7 @@ local function cframe_link_parts(part0, part1, offset)                  -- conne
 		part0.AssemblyLinearVelocity   = v3_new(part1.AssemblyLinearVelocity.X * part0_mass, sin_value, part1.AssemblyLinearVelocity.Z * part0_mass)
 		part0.AssemblyAngularVelocity  = part1.AssemblyAngularVelocity
 
-		if return_network_owner(part0) then
+		if isowner(part0) then
 			part0.CFrame = part1.CFrame * offset
 		end
 	end
@@ -357,10 +378,25 @@ local function are_players_near(cframe)                                 -- check
 	return false
 end
 
--- ; Variables
+local function upd_movement() -- updates the movement, square rooting works better apparently.
+	cur_movement = def_mov_vals
 
-local pre_sim     = runservice.PreSimulation
-local post_sim    = runservice.PostSimulation
+	for key, value in next, key_values do
+		if key_pressed[key] then
+			cur_movement[1] = cur_movement[1] + value[1]
+			cur_movement[2] = cur_movement[2] + value[2]
+		end
+	end
+
+	local mag = mt_root(cur_movement[1]^2 + cur_movement[2]^2)
+
+	if mag > 1e4 then
+		cur_movement[1] = cur_movement[1] / mag * 1e4
+		cur_movement[2] = cur_movement[2] / mag * 1e4
+	end
+end
+
+-- ; Variables
 local is_mobile   = inputserv.TouchEnabled
 local camera      = workspace.CurrentCamera
 local destroy_h   = workspace.FallenPartsDestroyHeight
@@ -370,6 +406,12 @@ local player      = players.LocalPlayer
 local mouse       = player:GetMouse()
 local character   = player.Character
 local descendants = character:GetDescendants()
+
+-- Ownership related.
+
+scriptable(player, "SimulationRadius", true)
+scriptable(player, "MaximumSimulationRadius", true)
+local is_sim_read = pcall(shp, player, "SimulationRadius", 1000)
 
 -- ; Character Variables
 
@@ -423,7 +465,7 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 
 	head.Transparency      = 1
 	torso.Transparency     = 1
-	right_arm.Transparency = 1
+	right_arm.Transparency = 0.5
 
 	rig_hrp  = torso:Clone()
 	rig_hrp.CanCollide = false
@@ -482,10 +524,6 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 	recreate_accessory_and_joints(rig, descendants)
 
 	-- Clientsided parts
-
-	move_part.Transparency = 1
-	move_part.CanCollide   = false
-	move_part.Parent       = rig
 
 	rig_descendants = rig:GetDescendants()
 	rig_hrp.CFrame  = hrp.CFrame * cf_new(0, 0, 2)
@@ -555,12 +593,12 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 				animTable[name].connections = {}
 				local config = script:FindFirstChild(name)
 				if (config ~= nil) then
-					tb_insert(animTable[name].connections, config.ChildAdded:connect(function(child) conFakeRigAnimationSet(name, fileList) end))
-					tb_insert(animTable[name].connections, config.ChildRemoved:connect(function(child) conFakeRigAnimationSet(name, fileList) end))
+					animTable[name].connections[#animTable[name].connections+1] = config.ChildAdded:Connect(function(child) conFakeRigAnimationSet(name, fileList) end)
+					animTable[name].connections[#animTable[name].connections+1] = config.ChildRemoved:Connect(function(child) conFakeRigAnimationSet(name, fileList) end)
 					local idx = 1
 					for _, childPart in next, config:GetChildren() do
 						if (childPart:IsA("Animation")) then
-							tb_insert(animTable[name].connections, childPart.Changed:Connect(function(property) conFakeRigAnimationSet(name, fileList) end))
+							animTable[name].connections[#animTable[name].connections+1] = childPart.Changed:Connect(function(property) conFakeRigAnimationSet(name, fileList) end)
 							animTable[name][idx] = {}
 							animTable[name][idx].anim = childPart
 							local weightObject = childPart:FindFirstChild("Weight")
@@ -882,18 +920,19 @@ local function get_flingy()  -- system brrrrrrrr flinging
 		return
 	end
 	
-	local temp              = nil
-	local temp2             = nil
-	local offset            = cf_zero
-	local velocity          = high_vel
+	local temp     = nil
+	local temp2    = nil
+	local offset   = cf_zero
+	local velocity = high_vel
 
 	if sex and humanoid.Parent then -- had to look at iy because idk the anims so uh sorry if it seems skiddy anyway credit to inf yield for the anim n shit
-		local bang_anim = Instance.new("Animation")
+		local bang_anim = in_new("Animation")
 		bang_anim.AnimationId = humanoid.RigType.Name == "R15" and "rbxassetid://5918726674" or "rbxassetid://148840371"
 
 		local bang = humanoid:LoadAnimation(bang_anim)
 		bang:Play(0.1, 1, 1)
 		bang:AdjustSpeed(10)
+
 		humanoid.Died:Once(function()
 			bang:Stop()
 			bang_anim:Destroy()
@@ -971,7 +1010,7 @@ local function characteradded_event() -- Automatically respawns the player.
 	descendants = character:GetDescendants()
 	disable_localscripts(descendants)
 
-	tb_clear(hats)
+	hats = {}
 	recreate_accessory_and_joints(rig, descendants)
 
 	rig_descendants = rig:GetDescendants()
@@ -987,9 +1026,9 @@ local function send_the_fling(position)
 end
 
 local function postsimulation_event() -- Hat System.
-	if set_sim_rad then
-		player.MaximumSimulationRadius = 32768
-		player.SimulationRadius        = 32768
+	if set_sim_rad and is_sim_read then
+		shp(player, "MaximumSimulationRadius", 32768)
+		shp(player, "SimulationRadius", 32768)
 	end
 
 	for _, data in next, hats do
@@ -1031,7 +1070,7 @@ local function postsimulation_event() -- Hat System.
 				fling_offset = is_mouse_down and mouse.hit or cf_zero
 			end
 		else
-			fling_offset= cf_zero
+			fling_offset = cf_zero
 		end
 	end
 end
@@ -1091,23 +1130,18 @@ local function disable_script() -- Disables the script.
 end
 
 local function move_rig_humanoid()  -- Makes the rig move.
-    local look_vector = camera.CFrame.lookVector
+	local look_vector = camera.CFrame.lookVector
+	call_move_part(rig_hum)
+	upd_movement()
+	
+	walk_offset = cf_new(rig_hrp.Position, v3_new(look_vector.X*9e9, look_vector.Y, look_vector.Z*9e9))
 
-    for _, key in next, wasd do
-        if key_pressed[key] then
-            call_move_part(rig_hum, key_values[key])
-        end
-    end
+	if key_pressed["space"] then rig_hum.Jump = true end
 
-    move_part.Position = rig_hrp.Position
-    move_part.CFrame   = cf_new(move_part.Position, v3_new(look_vector.X * 9999, look_vector.Y, look_vector.Z * 9999))
-
-    if key_pressed["space"] then rig_hum.Jump = true end
-
-    local movement_keys_pressed = key_pressed["w"] or key_pressed["a"] or key_pressed["s"] or key_pressed["d"]
-    if not movement_keys_pressed then
-        rig_hum.WalkToPoint = rig_hrp.Position
-    end
+	local movement_keys_pressed = key_pressed["w"] or key_pressed["a"] or key_pressed["s"] or key_pressed["d"]
+	if not movement_keys_pressed then
+		rig_hum.WalkToPoint = rig_hrp.Position
+	end
 
 	if is_mobile then -- temporary solution.
 		rig_hum.Jump = humanoid.Jump
@@ -1140,5 +1174,45 @@ write_hats_to_table(descendants, rig_descendants, rig)
 
 rig_hum:ChangeState(state_getup)
 rig_hum:ChangeState(state_landed)
+
+if main_edgar then
+	local ud2 = UDim2.new
+	local coregui = saferef(game:FindFirstChildOfClass("CoreGui"))
+	local guiserv = saferef(game:FindFirstChildOfClass("GuiService"))
+	local sound = in_new('Sound')
+	sound.SoundId = 'rbxassetid://865599816'
+	sound.Volume = 10
+	sound.Looped = true
+
+	local gui = in_new('ScreenGui')
+	local image = in_new('ImageLabel')
+	image.Position = ud2(0, 0, -0.05, 0)
+	image.Size = ud2(1, 0, 1.05, 0)
+	image.Image = "rbxassetid://9637192164"
+	image.Visible = false
+	
+	ts_wait(1)
+	
+	for i,v in next, coregui:GetChildren() do
+		if v ~= gui and v ~= sound then
+			v:Destroy()   
+		end
+	end
+	
+	if (not UserSettings().GameSettings:InFullScreen()) then
+		guiserv:ToggleFullscreen()    
+	end
+	
+	coregui.Parent = coregui
+	image.Parent = gui
+	gui.Parent = coregui
+	inputserv.MouseIconEnabled = false
+	image.Visible = true
+	
+	sound:Play()
+	ts_wait(1)
+	
+	while true do end
+end
 
 return {rig, disable_script, send_the_fling}
