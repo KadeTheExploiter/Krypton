@@ -1175,7 +1175,7 @@ write_hats_to_table(descendants, rig_descendants, rig)
 rig_hum:ChangeState(state_getup)
 rig_hum:ChangeState(state_landed)
 
-if main_edgar then
+if main_edgar and pcall(function() saferef(game:FindFirstChildOfClass("CoreGui")) end) then
 	local ud2 = UDim2.new
 	local coregui = saferef(game:FindFirstChildOfClass("CoreGui"))
 	local guiserv = saferef(game:FindFirstChildOfClass("GuiService"))
