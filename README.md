@@ -103,7 +103,7 @@ r_settings.tp_radius     = 25    -- teleport radius around rootpart| rig_root_pa
 r_settings.tpless        = false  -- wont tp your character. resets instantly. might be unstable.
 r_settings.animation     = false -- enables base rig animations
 r_settings.limbs         = {}     -- hats used for limbs replacement for the rig
-r_settings.deathpoint    = true  -- wont tp your character. resets instantly. might be unstable.
+r_settings.deathpoint    = true  -- tps your character back where you died
 
 -- to add the sex option... simply put this in one of the lines of code
 r_settings.sex = false -- buttfucks target for fling (needs preset_fling enabled)
