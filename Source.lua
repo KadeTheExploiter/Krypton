@@ -1,6 +1,5 @@
--- Kade's Reanimate | @xyzkade | https://discord.gg/g2Txp9VRAJvc/ | V: 1.2.0 --
--- task lib related funcs have been moved to runservice related 
--- optimization sigma
+-- Kade's Reanimate | @xyzkade | https://discord.gg/ArpG4kDvW2 | V: 1.2.1 --
+--[[ Thanks @deuces1961 for helping me out. ]]
 
 local config   = kade_conf or Kade_Config or {}
 local os       = os
@@ -10,14 +9,14 @@ local string   = string
 local Vector3  = Vector3
 local CFrame   = CFrame
 
-local main_edgar  = false -- toggle this for funny, works only for incognito
 local os_clock    = os and os.clock or tick
-
 local str_sub     = string.sub
 local mt_rad      = math.rad
 local mt_cos      = math.cos
 local mt_sin      = math.sin
 local mt_random   = math.random
+local mt_root     = math.sqrt
+local inf         = math.huge
 local cf_new      = CFrame.new
 local cf_angle    = CFrame.Angles
 local cf_zero     = CFrame.identity
@@ -25,19 +24,11 @@ local v3_new      = Vector3.new
 local v3_zero     = Vector3.zero
 local r3_new      = Region3.new
 local in_new      = Instance.new
-local mt_root     = math.sqrt
 local pcall       = pcall
 
-local fakecref    = function(x) return x end
-local whatexec    = getexecutorname or function() return "localscript" end
-local isincognito = whatexec():find("incognito") and true or false
-local shp         = sethiddenproperty or function(a,b,c) a[b]=c end -- sethidprop
-local saferef     = (isincognito and fakecref) or cloneref or fakecref -- security
 local isowner     = isnetworkowner or function(part) return part.ReceiveAge == 0 end -- get parts owner
-local scriptable  = setscriptable or function() end -- makescriptable
-
-local global      = (getgenv and getgenv()) or getfenv(0)
-local game        = workspace.Parent
+local shp         = sethiddenproperty or function(a,b,c) a[b]=c end -- sethidprop
+local global      = (getgenv and getgenv()) or _G
 global.Rig        = nil
 
 local rig_name      = config.rig_name or "FakeRig" -- sets name for the rig
@@ -52,6 +43,7 @@ local tpless        = config.tpless or false  -- wont tp your character. resets 
 local anti_void     = config.anti_void or false  -- avoid being kicked into void
 local wait_time     = config.wait_time or 0.26   -- waits until killing the character again on respawn
 local radius_val    = config.radius_val or 10    -- radius to keep real rig's away from players 
+radius_val = radius_val/2 -- optimization thing. ignore
 local deathpoint    = config.deathpoint or true    -- tps you back to the same place when you stopped the reanimate
 local tp_radius     = config.tp_radius or 25    -- teleport radius around rootpart| rig_root_part * cframe.new(math.random(-tp_radius, tp_radius), 0, math.random(-tp_radius, tp_radius))
 local limbs         = config.limbs or {       -- hats used for limbs replacement for the rig  (default hats below)
@@ -96,7 +88,6 @@ local enum_humstate  = Enum.HumanoidStateType
 local enum_userinput = Enum.UserInputType
 
 local is_mouse_down = false
-local fake_offset   = cf_zero -- linked to movement
 local walk_offset   = cf_zero
 local fling_offset  = cf_zero
 local keys_list     = {w = enum_keycode.W, a = enum_keycode.A, s = enum_keycode.S, d = enum_keycode.D, space = enum_keycode.Space}
@@ -109,11 +100,7 @@ local state_dead    = enum_humstate.Dead
 local state_getup   = enum_humstate.GettingUp
 local state_landed  = enum_humstate.Landed
 
--- :: Begin
-
--- ; Script Variables
-
-local radiuscheck    =  v3_new(radius_val, radius_val, radius_val) -- radius to keep real rig's away from players 
+local radiuscheck    =  v3_new(radius_val, radius_val, radius_val) -- radius to keep real rig's away from players
 local no_sleep_cf    =  cf_zero -- makes parts always in move so they will never sleep.
 local high_vel       =  v3_new(8096,8096,8096) -- flinging velocity
 local sin_value      =  0  -- random value, needed for dynamical velocity
@@ -122,14 +109,11 @@ local hats           =  {} -- Hats that need for the rig to work, such as extra 
 local reset_bind     =  in_new("BindableEvent") -- bindable event for disabling the script.
 local mousebutton1   =  enum_userinput.MouseButton1 -- check optimization
 
--- ; Datamodel Variables
-
-
-local workspace  = saferef(game:FindFirstChildOfClass("Workspace"))
-local players    = saferef(game:FindFirstChildOfClass("Players"))
-local runservice = saferef(game:FindFirstChildOfClass("RunService"))
-local startgui   = saferef(game:FindFirstChildOfClass("StarterGui"))
-local inputserv  = saferef(game:FindFirstChildOfClass("UserInputService"))
+local workspace  = game:FindFirstChildOfClass("Workspace")
+local players    = game:FindFirstChildOfClass("Players")
+local runservice = game:FindFirstChildOfClass("RunService")
+local startgui   = game:FindFirstChildOfClass("StarterGui")
+local inputserv  = game:FindFirstChildOfClass("UserInputService")
 
 local pre_sim     = runservice.PreSimulation
 local post_sim    = runservice.PostSimulation
@@ -165,18 +149,14 @@ end)
 -- ; Starting Functions
 
 local function disable_localscripts(descendants_table)
-	if no_scripts then
-		for i=1,#descendants_table do
-			local localscript = descendants_table[i]
-	
-			if localscript:IsA("LocalScript") then
-				localscript.Disabled = true
-			end
+	for _, localscript in next, descendants_table do
+		if localscript:IsA("LocalScript") then
+			localscript.Disabled = true
 		end
 	end
 end
 
-local function call_move_part(humanoid)        -- calls moving on a humanoid
+local function call_move_part(humanoid) -- calls moving on a humanoid
 	local x, z = cur_movement[1], cur_movement[2]
 	walk_offset = walk_offset * cf_new(-x, 0,-z).Position
 	
@@ -187,9 +167,7 @@ end
 
 local function ffcoc_and_name(parent, classname, name)     -- findfirstchildofclass with name check
 	local list = parent:GetDescendants()
-	for i=1,#list do
-		local x = list[i]
-		
+	for _, x in next, list do
 		if x.Name == name and x:IsA(classname) then
 			return x
 		end
@@ -241,8 +219,7 @@ local function check_matching_hatdata(handle, v_name, v_mesh_id, v_texture_id) -
 end
 
 local function find_accessory(descendants_table, name, mesh_id, texture_id)  -- returns a handle if found in the descendant of a model.
-	for i = 1,#descendants_table do
-		local handle = descendants_table[i]
+	for _, handle in next, descendants_table do
 		if handle.Name == "Handle" and check_matching_hatdata(handle, name, mesh_id, texture_id) then
 			return handle
 		end
@@ -259,17 +236,13 @@ local function recreate_accessory_and_joints(model, descendants_table) -- Recrea
 	local model_descendants = model:GetDescendants()
 	local head = model:WaitForChild("Head")
 
-	for i = 1,#model_descendants do
-		local Accessory = model_descendants[i]
-
-		if Accessory:IsA("Accessory") then
-			Accessory:Destroy()
+	for _, accessory in next, model_descendants do
+		if accessory:IsA("Accessory") then
+			accessory:Destroy()
 		end
 	end
 
-	for i = 1,#descendants_table do
-		local accessory   = descendants_table[i]
-
+	for _, accessory in next, descendants_table do
 		if accessory:IsA("Accessory") then
 			local handle = wait_for_child_of_class(accessory, "BasePart", 1, "Handle")
 			local handle_weld = wait_for_child_of_class(handle, "Weld", 1)
@@ -311,9 +284,7 @@ local function recreate_accessory_and_joints(model, descendants_table) -- Recrea
 end
 
 local function write_hats_to_table(descendants_table, fake_descendants_table, fake_model)       -- adds hats for alignment, and tweaks them ( hats )
-	for i = 1,#descendants_table do
-		local handle = descendants_table[i]
-
+	for _, handle in next, descendants_table do
 		if handle.Name == "Handle" then
 			handle.Massless = false
 
@@ -351,7 +322,7 @@ local function write_hats_to_table(descendants_table, fake_descendants_table, fa
 	end
 end
 
-local function cframe_link_parts(part0, part1, offset)                  -- connects part0 to part1
+local function cframe_link_parts(part0, part1, offset) -- connects part0 to part1
 	if part0 and part0.Parent and part1 and part1.Parent then
 		local part0_mass               = part1.Mass * 5
 		part0.AssemblyLinearVelocity   = v3_new(part1.AssemblyLinearVelocity.X * part0_mass, sin_value, part1.AssemblyLinearVelocity.Z * part0_mass)
@@ -363,15 +334,14 @@ local function cframe_link_parts(part0, part1, offset)                  -- conne
 	end
 end
 
-local function are_players_near(cframe)                                 -- checks if players are near the tp location.
+local function are_players_near(cframe) -- checks if players are near the tp location.
 	local position = cframe.Position
-	local radius = radiuscheck / 2
 
-	local check_region = r3_new(position - radius, position + radius)
-	local parts_in_way = workspace:FindPartsInRegion3(check_region, nil, math.huge)
+	local check_region = r3_new(position - radiuscheck, position + radiuscheck)
+	local parts_in_way = workspace:FindPartsInRegion3(check_region, nil, inf)
 
-	for i=1,#parts_in_way do
-		local model = parts_in_way[i].Parent
+	for i, part in next, parts_in_way do
+		local model = part.Parent
 
 		if model:IsA("Model") and model.PrimaryPart ~= nil then
 			return true
@@ -401,6 +371,7 @@ end
 
 -- ; Variables
 local is_mobile   = inputserv.TouchEnabled
+local is_console  = inputserv.GamepadEnabled
 local camera      = workspace.CurrentCamera
 local destroy_h   = workspace.FallenPartsDestroyHeight
 local spawnpoint  = wait_for_child_of_class(workspace, "SpawnLocation", 1)
@@ -409,12 +380,9 @@ local player      = players.LocalPlayer
 local mouse       = player:GetMouse()
 local character   = player.Character
 local descendants = character:GetDescendants()
-
--- Ownership related.
-
-scriptable(player, "SimulationRadius", true)
-scriptable(player, "MaximumSimulationRadius", true)
-local is_sim_read = pcall(shp, player, "SimulationRadius", 1000)
+local is_setmaxsim_read = pcall(shp, player, "MaximumSimulationRadius", 1000)
+local is_setsim_read = pcall(shp, player, "SimulationRadius", 1000)
+local is_sim_changable = is_setsim_read and is_setmaxsim_read
 
 -- ; Character Variables
 
@@ -429,10 +397,13 @@ end
 
 local return_cf  = spawnpoint and spawnpoint.CFrame * cf_new(0,20,0) or hrp.CFrame
 local rig_hrp, rig_hum, rig_descendants
+local bang_anim = in_new("Animation")
+bang_anim.AnimationId = humanoid.RigType.Name == "R15" and "rbxassetid://5918726674" or "rbxassetid://148840371"
 
 local rig = in_new("Model"); do -- Scoping to make it look nice.
 	local hum_desc = in_new("HumanoidDescription")
 	local animator = in_new("Animator")
+	local anim_script = in_new("LocalScript")
 	rig_hum = in_new("Humanoid")
 
 	local function makejoint(name, part0, part1, c0, c1)
@@ -527,6 +498,8 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 	recreate_accessory_and_joints(rig, descendants)
 
 	-- Clientsided parts
+	anim_script.Name = "Animate"
+	anim_script.Parent = rig
 
 	rig_descendants = rig:GetDescendants()
 	rig_hrp.CFrame  = hrp.CFrame * cf_new(0, 0, 2)
@@ -535,13 +508,9 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 
 	if animations then
 		ts_spawn(function()
-			local anim_script = in_new("LocalScript")
-			anim_script.Name = "Animate"
-			anim_script.Parent = rig
 			local anims_toggled = (anim_script and anim_script.Parent) and anim_script.Enabled or false
 			local anim_priority = Enum.AnimationPriority
 			local playAnimation = function() end
-			local toolKeyFrameReachedFunc = function() end
 	
 			local pose = "Standing"
 			local currentAnim = ""
@@ -549,17 +518,8 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 			local currentAnimTrack = nil
 			local currentAnimKeyframeHandler = nil
 			local currentAnimSpeed = 1.0
-			local toolAnimName = ""
-			local toolAnimTrack = nil
-			local toolAnimInstance = nil
-			local currentToolAnimKeyframeHandler = nil
 			local lastTick = 0
-			local toolAnim = "None"
-			local toolAnimTime = 0
 			local jumpAnimTime = 0
-			local jumpAnimDuration = 0.3
-			local toolTransitionTime = 0.1
-			local fallTransitionTime = 0.3
 			local time = 0
 			local animTable = {}
 			local dances = {"dance1", "dance2", "dance3"}
@@ -572,9 +532,6 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 				fall = 	{ { id = "http://www.roblox.com/asset/?id=180436148", weight = 10 } }, 
 				climb = { { id = "http://www.roblox.com/asset/?id=180436334", weight = 10 } }, 
 				sit = 	{ { id = "http://www.roblox.com/asset/?id=178130996", weight = 10 } },	
-				toolnone = { { id = "http://www.roblox.com/asset/?id=182393478", weight = 10 } },
-				toolslash = { { id = "http://www.roblox.com/asset/?id=129967390", weight = 10 } },
-				toollunge = { { id = "http://www.roblox.com/asset/?id=129967478", weight = 10 } },
 				wave = { { id = "http://www.roblox.com/asset/?id=128777973", weight = 10 } },
 				point = { { id = "http://www.roblox.com/asset/?id=128853357", weight = 10 } },
 				dance1 = { { id = "http://www.roblox.com/asset/?id=182435998", weight = 10 }, { id = "http://www.roblox.com/asset/?id=182491037", weight = 10 }, { id = "http://www.roblox.com/asset/?id=182491065", weight = 10 } },
@@ -619,7 +576,7 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 				if (animTable[name].count <= 0) then
 					for idx, anim in pairs(fileList) do
 						animTable[name][idx] = {}
-						animTable[name][idx].anim = Instance.new("Animation")
+						animTable[name][idx].anim = in_new("Animation")
 						animTable[name][idx].anim.Name = name
 						animTable[name][idx].anim.AnimationId = anim.id
 						animTable[name][idx].weight = anim.weight
@@ -631,7 +588,7 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 		
 			if animator then
 				local animTracks = animator:GetPlayingAnimationTracks()
-				for i, track in next, animTracks do
+				for _, track in next, animTracks do
 					track:Stop(0); track:Destroy()
 				end
 			end
@@ -685,6 +642,7 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 					roll = roll - animTable[animName][idx].weight
 					idx = idx + 1
 				end
+
 				local anim = animTable[animName][idx].anim
 				if (anim ~= currentAnimInstance) then
 					if (currentAnimTrack ~= nil) then
@@ -706,62 +664,13 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 				end
 			end
 		
-			local function playToolAnimation(animName, transitionTime, humanoid, priority)	 
-				local roll = mt_random(1, animTable[animName].totalWeight) 
-				local idx = 1
-				while (roll > animTable[animName][idx].weight) do
-					roll = roll - animTable[animName][idx].weight
-					idx = idx + 1
-				end
-				local anim = animTable[animName][idx].anim
-				if (toolAnimInstance ~= anim) then
-					if (toolAnimTrack ~= nil) then
-						toolAnimTrack:Stop()
-						toolAnimTrack:Destroy()
-						transitionTime = 0
-					end
-		
-					toolAnimTrack = humanoid:LoadAnimation(anim)
-					if priority then
-						toolAnimTrack.Priority = priority
-					end
-		
-					toolAnimTrack:Play(transitionTime)
-					toolAnimName = animName
-					toolAnimInstance = anim
-		
-					currentToolAnimKeyframeHandler = toolAnimTrack.KeyframeReached:connect(toolKeyFrameReachedFunc)
-				end
-			end
-		
-			toolKeyFrameReachedFunc = function(frameName)
-				pcall(function() 
-					if (frameName == "End") then playToolAnimation(toolAnimName, 0.0, rig_hum) end 
-				end)
-			end
-		
-			local function stopToolAnimations()
-				local oldAnim = toolAnimName
-				if (currentToolAnimKeyframeHandler ~= nil) then
-					currentToolAnimKeyframeHandler:disconnect()
-				end
-				toolAnimName = ""
-				toolAnimInstance = nil
-				if (toolAnimTrack ~= nil) then
-					toolAnimTrack:Stop()
-					toolAnimTrack:Destroy()
-					toolAnimTrack = nil
-				end
-				return oldAnim
-			end
-		
 			local function onDied() if anims_toggled then pose = "Dead" end end
 			local function onGettingUp() if anims_toggled then pose = "GettingUp" end end
-			local function onFallingDown() if anims_toggled then	pose = "FallingDown" end end
+			local function onFallingDown() if anims_toggled then pose = "FallingDown" end end
 			local function onSeated() if anims_toggled then pose = "Seated" end end
 			local function onPlatformStanding() if anims_toggled then pose = "PlatformStanding" end end
 			local function onRunning(speed)
-				if anims_toggled  then
+				if anims_toggled then
 					if speed > 0.01 then
 						playAnimation("walk", 0.1, rig_hum) pose = "Running"
 						if currentAnimInstance and currentAnimInstance.AnimationId == "http://www.roblox.com/asset/?id=180426354" then
@@ -776,7 +685,7 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 			local function onJumping()
 				if anims_toggled then 
 					playAnimation("jump", 0.1, rig_hum)
-					jumpAnimTime = jumpAnimDuration
+					jumpAnimTime = 0.3
 					pose = "Jumping"
 				end
 			end
@@ -789,40 +698,13 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 		
 			local function onFreeFall()
 				if anims_toggled then
-					if (jumpAnimTime <= 0) then playAnimation("fall", fallTransitionTime, rig_hum) end
+					if (jumpAnimTime <= 0) then playAnimation("fall", 0.3, rig_hum) end
 					pose = "FreeFall"
 				end
 			end
 		
 			local function onSwimming(speed)
 				if anims_toggled then pose = speed >= 0 and "Running" or "Standing" end
-			end
-		
-			local function getTool()
-				return nil
-			end
-		
-			local function getToolAnim(tool)
-				for _, c in next, tool:GetChildren() do
-					if c.Name == "toolanim" and c.ClassName == "StringValue" then
-						return c
-					end
-				end
-				return nil
-			end
-		
-			local function animateTool()
-				if anims_toggled then
-					if (toolAnim == "None") then
-						playToolAnimation("toolnone", toolTransitionTime, rig_hum, anim_priority.Idle) return
-					end
-					if (toolAnim == "Slash") then
-						playToolAnimation("toolslash", 0, rig_hum, anim_priority.Action) return
-					end
-					if (toolAnim == "Lunge") then
-						playToolAnimation("toollunge", 0, rig_hum, anim_priority.Action) return
-					end
-				end
 			end
 		
 			local function move(time)
@@ -839,7 +721,7 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 				end
 		
 				if (pose == "FreeFall" and jumpAnimTime <= 0) then
-					playAnimation("fall", fallTransitionTime, rig_hum)
+					playAnimation("fall", 0.3, rig_hum)
 				elseif (pose == "Seated") then
 					playAnimation("sit", 0.5, rig_hum)
 					return
@@ -858,25 +740,6 @@ local rig = in_new("Model"); do -- Scoping to make it look nice.
 					ls:SetDesiredAngle(desiredAngle - climbFudge)
 					rh:SetDesiredAngle(-desiredAngle)
 					lh:SetDesiredAngle(-desiredAngle)
-				end
-				local tool = getTool()
-				if tool and tool:FindFirstChild("Handle") then
-					local animStringValueObject = getToolAnim(tool)
-					if animStringValueObject then
-						toolAnim = animStringValueObject.Value
-						animStringValueObject.Parent = nil
-						toolAnimTime = time + .3
-					end
-					if time > toolAnimTime then
-						toolAnimTime = 0
-						toolAnim = "None"
-					end
-					animateTool()		
-				else
-					stopToolAnimations()
-					toolAnim = "None"
-					toolAnimInstance = nil
-					toolAnimTime = 0
 				end
 			end
 		
@@ -927,11 +790,9 @@ local function get_flingy()  -- system brrrrrrrr flinging
 	local temp2    = nil
 	local offset   = cf_zero
 	local velocity = high_vel
+	local children = character:GetChildren()
 
 	if sex and humanoid.Parent then -- had to look at iy because idk the anims so uh sorry if it seems skiddy anyway credit to inf yield for the anim n shit
-		local bang_anim = in_new("Animation")
-		bang_anim.AnimationId = humanoid.RigType.Name == "R15" and "rbxassetid://5918726674" or "rbxassetid://148840371"
-
 		local bang = humanoid:LoadAnimation(bang_anim)
 		bang:Play(0.1, 1, 1)
 		bang:AdjustSpeed(10)
@@ -942,27 +803,25 @@ local function get_flingy()  -- system brrrrrrrr flinging
 		end)
 	end
 
-	local children = character:GetChildren()
-	temp2 = pre_sim:Connect(function()
-		for i=1,#children do
-			local child = children[i]
+	temp = post_sim:Connect(function()
+		hrp.AssemblyLinearVelocity = velocity
+		hrp.AssemblyAngularVelocity = v3_zero
+		hrp.CFrame = fling_offset * offset
+	end)
 
-			if child:IsA("BasePart") then
-				child.CanCollide = false
-				child.CanTouch = false
-				child.CanQuery = false
+	temp2 = pre_sim:Connect(function()
+		for _, part in next, children do
+
+			if part:IsA("BasePart") then
+				part.CanCollide = false
+				part.CanTouch = false
+				part.CanQuery = false
 			end
 		end
 		
 		offset = cf_new(0, 0, 1 + 0.5 * mt_sin(os_clock()*50))
 	end)
 
-	temp = post_sim:Connect(function()
-		hrp.AssemblyLinearVelocity = velocity
-		hrp.AssemblyAngularVelocity = v3_zero
-		hrp.CFrame = fling_offset * offset
-	end)
-		
 	repeat ts_wait() until not is_mouse_down
 
 	velocity = v3_zero
@@ -1011,7 +870,10 @@ local function characteradded_event() -- Automatically respawns the player.
 	end
 
 	descendants = character:GetDescendants()
-	disable_localscripts(descendants)
+	
+	if no_scripts then
+		disable_localscripts(descendants)
+	end
 
 	hats = {}
 	recreate_accessory_and_joints(rig, descendants)
@@ -1025,21 +887,20 @@ local function characteradded_event() -- Automatically respawns the player.
 end
 
 local function send_the_fling(position)
-	fling_offset.CFrame = position
+	if not preset_fling then
+		fling_offset.CFrame = position
+	end
 end
 
 local function postsimulation_event() -- Hat System.
-	if set_sim_rad and is_sim_read then
+	if set_sim_rad and is_sim_changable then
 		shp(player, "MaximumSimulationRadius", 32768)
 		shp(player, "SimulationRadius", 32768)
 	end
 
 	for _, data in next, hats do
-		local handle = data[1]
-		local part1  = data[2]
 		local offset = data[3] or cf_zero
-		
-		cframe_link_parts(handle, part1, offset * no_sleep_cf)
+		cframe_link_parts(data[1], data[2], offset * no_sleep_cf)
 	end
 
 	for _, part in next, descendants do
@@ -1050,27 +911,21 @@ local function postsimulation_event() -- Hat System.
 		end
 	end
 
-	if hrp and hrp.Parent and flinging and preset_fling then
-		hrp.AssemblyLinearVelocity = v3_zero
-
+	if hrp and flinging and preset_fling then
 		if is_mouse_down then
 			local target = mouse.Target
 			local targetp = target.Parent
 			local targetpp = targetp.Parent
-
-			target = targetp and targetp:FindFirstChildOfClass("Part") or targetpp and targetpp:FindFirstChildOfClass("Part")
-
-			if target and target.Name == "HumanoidRootPart" or target.Name == "Head" or target.Name == "Handle" then
-				local targethum = targetp and targetp:FindFirstChildOfClass("Humanoid") or targetpp and targetpp:FindFirstChildOfClass("Humanoid")
-				
-				local movedir = targethum.MoveDirection
-				if targethum and movedir.Magnitude > 0.25 then
-					fling_offset = target.CFrame * cf_new(movedir * targethum.WalkSpeed/1.5) * cf_new(0,mt_random(-2,2),0)
-				else
-					fling_offset = target.CFrame
-				end
+			local newtarget = nil
+			
+			if target and targetp:FindFirstChildOfClass("Humanoid") or targetpp:FindFirstChildOfClass("Humanoid") then
+				newtarget = targetp:FindFirstChildOfClass("Part") or targetpp:FindFirstChildOfClass("Part")
+			end
+			
+			if newtarget then
+				fling_offset = cf_new(target.Position + target.AssemblyLinearVelocity * (player:GetNetworkPing() * mt_random(20,35)))
 			else
-				fling_offset = is_mouse_down and mouse.hit or cf_zero
+				fling_offset = cf_new(mouse.Hit.Position)
 			end
 		else
 			fling_offset = cf_zero
@@ -1078,10 +933,8 @@ local function postsimulation_event() -- Hat System.
 	end
 end
 
-local function no_collide() -- optimization
-	for i=1,#rig_descendants do
-		local part = rig_descendants[i]
-	
+local function no_collide()
+	for _, part in next, rig_descendants do
 		if part and part.Parent and part:IsA("BasePart") then
 			part.CanCollide = false
 			part.CanTouch   = false
@@ -1090,14 +943,8 @@ local function no_collide() -- optimization
 	end
 end
 
-if not no_collisions then
-	no_collide = function() end
-end
-
 local function presimulation_event() -- collisions,  math formulas etc
-	no_collide()
-
-	if anti_void and rig_hrp.Position.Y <= (destroy_h + 75)  then
+	if anti_void and rig_hrp.Position.Y < (destroy_h + 75)  then
 		rig_hrp.CFrame = return_cf
 		rig_hrp.AssemblyLinearVelocity = v3_zero
 		rig_hrp.AssemblyAngularVelocity = v3_zero
@@ -1133,7 +980,7 @@ local function disable_script() -- Disables the script.
 end
 
 local function move_rig_humanoid()  -- Makes the rig move.
-	local look_vector = camera.CFrame.lookVector
+	local look_vector = camera.CFrame.LookVector
 	call_move_part(rig_hum)
 	upd_movement()
 	
@@ -1146,15 +993,13 @@ local function move_rig_humanoid()  -- Makes the rig move.
 		rig_hum.WalkToPoint = rig_hrp.Position
 	end
 
-	if is_mobile then -- temporary solution.
+	if is_mobile or is_console then -- temporary solution.
 		rig_hum.Jump = humanoid.Jump
 		rig_hum:Move(humanoid.MoveDirection, false)
 	end
 end
 
--- :: Finishing
-
--- Binding Functions To Signals
+-- :: Final steps and Binding Functions To Signals
 
 humanoid:ChangeState(state_dead)
 character:BreakJoints()
@@ -1167,55 +1012,20 @@ rbx_signals[#rbx_signals+1] = camera:GetPropertyChangedSignal("CameraSubject"):C
 rbx_signals[#rbx_signals+1] = pre_sim:Connect(presimulation_event)
 rbx_signals[#rbx_signals+1] = post_sim:Connect(postsimulation_event)
 rbx_signals[#rbx_signals+1] = post_sim:Connect(move_rig_humanoid)
+rbx_signals[#rbx_signals+1] = player.Chatted:Connect(function(message)
+	if message == "/e stopreanim" then
+		disable_script()		
+	end
+end)
+
+if no_collisions then rbx_signals[#rbx_signals+1] = pre_sim:Connect(no_collide) end
 
 startgui:SetCore("ResetButtonCallback", reset_bind)
-
--- Starting.
 
 set_camera_target()
 write_hats_to_table(descendants, rig_descendants, rig)
 
 rig_hum:ChangeState(state_getup)
 rig_hum:ChangeState(state_landed)
-
-if main_edgar then -- thanks derek :3
-	local ud2 = UDim2.new
-	local coregui = saferef(game:FindFirstChildOfClass("CoreGui"))
-	local guiserv = saferef(game:FindFirstChildOfClass("GuiService"))
-	local sound = in_new('Sound')
-	sound.SoundId = 'rbxassetid://865599816'
-	sound.Volume = 10
-	sound.Looped = true
-
-	local gui = in_new('ScreenGui')
-	local image = in_new('ImageLabel')
-	image.Position = ud2(0, 0, -0.05, 0)
-	image.Size = ud2(1, 0, 1.05, 0)
-	image.Image = "rbxassetid://9637192164"
-	image.Visible = false
-	
-	ts_wait(1)
-	
-	for i,v in next, coregui:GetChildren() do
-		if v ~= gui and v ~= sound then
-			v:Destroy()   
-		end
-	end
-	
-	if (not UserSettings().GameSettings:InFullScreen()) then
-		guiserv:ToggleFullscreen()    
-	end
-	
-	sound.Parent = coregui
-	image.Parent = gui
-	gui.Parent = coregui
-	inputserv.MouseIconEnabled = false
-	image.Visible = true
-	
-	sound:Play()
-	ts_wait(1)
-	
-	while true do end
-end
 
 return {rig, disable_script, send_the_fling}
