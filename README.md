@@ -1,5 +1,5 @@
 # Krypton Reanimator
-- Krypton, is a Roblox Reanimation script, The purpose of reanimations is to replicate client's animations to server.
+- Krypton, is a Roblox Reanimation script, The purpose of reanimations is to replicate client's animations to server with use of network ownership
 
 # Basic Script Info.
 
