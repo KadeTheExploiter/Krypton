@@ -1,17 +1,18 @@
-## About
-- What is this?
+# About
+### What is this?
   - Krypton Reanimate is a utility for Roblox that revolves around network manipulation and player accessories to intimidate a clientsided rig as a way to bring back pre-rcd exploiting (in a wacky way.)
 
-- Purpose
+### Purpose
   - Uses player hats and network ownership manipulation to take advance off the claimed player hats, thus creating a client sided rig to replicate a new character, which allows to run and replicate animation scripts such as Neptunian V or Krystal dance and so on.
 
-- Examples
+### Examples
   - Moving your parts around, converting filtering disabled scripts to make them replicate, debugging some offsets or animations, and so on.
 
-## Code Module
+# Code Module
 - To add later.
 
-## Credits
+# Credits
+
 ### Lead Developer
 
 - @xyzkade 
