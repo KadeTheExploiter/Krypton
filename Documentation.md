@@ -1,3 +1,19 @@
+# FAQ / Information.
+
+- Humanoid.AutoRotate Cannot be changed.
+-# Information: The issue for that is because it is being constantly overwritten so the shift lock issue can be fixed without having to do 300 lines of code.
+
+- Lack of mobile support
+-# Information: This won't happen for now due to me having not enough information about mobile movement system (Where is the joystick, how does it work, and so on, I am aware this sounds like a silly excuse but I do not play Roblox on mobile.), Roblox on a emulator should be fine.
+
+- Constantly Respawning the rig
+-# Information: Due to the patches Roblox threw on us, We have very limited choice of methods, and this one is the most reliable one, out of tools or random unanchored parts to take ownership of, the only way to get around weld destroying is by calling death on your character
+
+- Why not limbs?
+-# Information: Somewhere early 2023 Roblox threw a patch for the limbs by taking away ownership of it, which makes parts basically unclaimable, the only workaround is to call `SetNetworkOwner()` on the parts, which again requires serversided execution.
+
+# Configuration
+
 ## Hats
 - Arguments: Table `[ LimbName = {[1] = Texture <String> , [2] = Mesh <String>, [1] = Name <String>, [1] = Offset <CFrame>} ]`
 - Warning: If one out of the four arguments is incorrect, the hat will be skipped automatically from checks (Subject to change.).
