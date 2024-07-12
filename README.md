@@ -12,17 +12,21 @@
 - To add later.
 
 ## Credits
+### Lead Developer
 
 - @xyzkade 
   - Leader of the project, wrote the entire code
 
+### Contributions:
+
 - @deuces1961
   - Convinced me to stop relying on Lua optimizations, such as defining variables as they don't make any difference on LuaU VMs, some in general optimization tricks as well.
-
-### Contributions:
 
 - @myworldmain
   - Advice for shift lock fix, really appreciate it.
 
 - @ballsman3761
   - Critizating my code.
+
+## Official Discord
+- https://discord.gg/ArpG4kDvW2
