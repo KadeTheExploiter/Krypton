@@ -29,7 +29,6 @@ local Hats = {
 }
 ```
 
-
 ### ReturnOnDeath
 - Arguments: Boolean `[ true / false ]`
 - Warning: None.
@@ -55,22 +54,22 @@ local Hats = {
 - Warning: Setting it to low might cause additional yielding, and setting it on high will depend on your simulation radius.
 - Description: Determinates the radius of teleporting the real rig close to fake rig to claim hats.
 
-### NoCollisions
+### NoCollisions -- ⚠ To Be Added on global release.
 - Arguments: Boolean `[ true / false ]`
 - Warning: In some cases you might get automatically under the map due to your collisions being barely there
 - Description: Disables your client rig collisions, letting you clip through walls
 
-### AntiVoiding
+### AntiVoiding -- ⚠ To Be Added on global release.
 - Arguments: Boolean `[ true / false ]`
 - Warning: In some cases, you might automatically get stuck under the game if most of the walkable area in your game is close to the `FallenPartsDestroyHeight` property.
 - Description: Avoid falling into the void, If you fall into the void you will be sent back to either SpawnLocation or the offset when you reanimated at.
 
-### SetSimulationRadius
+### SetSimulationRadius -- ⚠ To Be Added on global release.
 - Arguments: Boolean `[ true / false ]`
 - Warning: Cannot be enabled on basic local scripts, in-game executors (like @MyWorlds, testing place executor), or in any low identity executor with identity reaching 2.
 - Description: Changes your simulation radius so it will always be on the maximum, providing better stability.
 
-### DisableCharacterScripts
+### DisableCharacterScripts -- ⚠ To Be Added on global release.
 - Arguments: Boolean `[ true / false ]`
 - Warning: In very special cases, disabling this may break some parts of the experience 
 - Description: Disables any local scripts from the server rig to avoid any tampering with client rig.
