@@ -6,7 +6,7 @@ local ReturnOnDeath = Configuration.ReturnOnDeath or true
 local Flinging = Configuration.Flinging or true
 local Animations = Configuration.Animations or true
 local WaitTime = Configuration.WaitTime or 0.2509
-local RigName = Configuration.RIgName or "FakeRig" -- sets name for the rig
+local RigName = Configuration.RigName or "FakeRig" -- sets name for the rig
 local TeleportOffsetRadius = Configuration.TeleportOffsetRadius or 25
 
 local Hats =  Configuration.Hats or {
