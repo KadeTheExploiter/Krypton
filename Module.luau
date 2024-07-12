@@ -1,3 +1,4 @@
+-- Version: 1.3
 -- Beta release, known bugs: You can fling yourself, that's it.
 -- // Defining Variables: Settings
 
