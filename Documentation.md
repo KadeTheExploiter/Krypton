@@ -1,5 +1,3 @@
-## Documentation for the reanimation
-
 ## Hats
 - Arguments: Table `[ LimbName = {[1] = Texture <String> , [2] = Mesh <String>, [1] = Name <String>, [1] = Offset <CFrame>} ]`
 - Warning: If one out of the four arguments is incorrect, the hat will be skipped automatically from checks (Subject to change.).
