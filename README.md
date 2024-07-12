@@ -9,7 +9,18 @@
   - Moving your parts around, converting filtering disabled scripts to make them replicate, debugging some offsets or animations, and so on.
 
 # Code Module
-- To add later.
+```lua
+Configuration = {}
+Configuration.ReturnOnDeath = true
+Configuration.Flinging = true
+Configuration.Animations = true
+Configuration.WaitTime = 0.2509
+Configuration.RigName = "FakeRig"
+Configuration.TeleportOffsetRadius = 25
+Configuration.Hats = nil -- use the default ones for now pls (they are on discord server)
+local Module = game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Krypton/main/Module.luau")
+loadstring(Module)()
+```
 
 # Credits
 
