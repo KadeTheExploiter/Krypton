@@ -9,7 +9,7 @@ local WaitTime = Configuration.WaitTime or 0.2509
 local RigName = Configuration.RIgName or "FakeRig" -- sets name for the rig
 local TeleportOffsetRadius = Configuration.TeleportOffsetRadius or 25
 
-local Hats = {
+local Hats =  Configuration.Hats or {
 	["Right Arm"] = {
 		{Texture = "rbxassetid://14255544465", Mesh = "rbxassetid://14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))}
 	},
