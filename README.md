@@ -1,3 +1,5 @@
+# BETA RELEASE, PLEASE REPORT BUGS ON DISCORD ON THE BOTTOM.
+
 # About
 ### What is this?
   - Krypton Reanimate is a utility for Roblox that revolves around network manipulation and player accessories to intimidate a clientsided rig as a way to bring back pre-rcd exploiting (in a wacky way.)
