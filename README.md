@@ -1,5 +1,3 @@
-# BETA RELEASE, PLEASE REPORT BUGS ON DISCORD ON THE BOTTOM.
-
 # About
 ### What is this?
   - Krypton Reanimate is a utility for Roblox that revolves around network manipulation and player accessories to intimidate a clientsided rig as a way to bring back pre-rcd exploiting (in a wacky way.)
@@ -19,6 +17,10 @@ Configuration.Animations = true
 Configuration.WaitTime = 0.2509
 Configuration.RigName = "FakeRig"
 Configuration.TeleportOffsetRadius = 25
+Configuration.NoCollisions = true
+Configuration.AntiVoiding = true
+Configuration.SetSimulationRadius = true
+Configuration.DisableCharacterScripts = true
 Configuration.Hats = nil -- use the default ones for now pls (they are on discord server)
 local Module = game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Krypton/main/Module.luau")
 loadstring(Module)()
