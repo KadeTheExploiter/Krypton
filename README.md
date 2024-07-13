@@ -10,6 +10,14 @@
 
 # Code Module
 ```lua
+--[[ Default hats:
+https://www.roblox.com/catalog/14255560646/Extra-Left-Tan-Arm
+https://www.roblox.com/catalog/14255562939/Extra-Right-Tan-Arm
+https://www.roblox.com/catalog/17374846953/Extra-Right-Black-Arm
+https://www.roblox.com/catalog/17374851733/Extra-Left-Black-Arm
+https://www.roblox.com/catalog/13421786478/Extra-Torso-Blocky
+]]--
+
 Configuration = {}
 Configuration.ReturnOnDeath = true
 Configuration.Flinging = true
