@@ -12,7 +12,9 @@
 
 # Code Module
 ```lua
---[[ Default hats:
+--[[
+	Default hats:
+
 	https://www.roblox.com/catalog/14255560646/Extra-Left-Tan-Arm
 	https://www.roblox.com/catalog/14255562939/Extra-Right-Tan-Arm
 	https://www.roblox.com/catalog/17374846953/Extra-Right-Black-Arm
@@ -31,7 +33,7 @@ Configuration.NoCollisions = true
 Configuration.AntiVoiding = true
 Configuration.SetSimulationRadius = true
 Configuration.DisableCharacterScripts = true
-Configuration.Hats = nil -- use the default ones for now pls (they are on discord server)
+Configuration.Hats = nil
 local Module = game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Krypton/main/Module.luau")
 loadstring(Module)()
 ```
