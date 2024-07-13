@@ -53,5 +53,5 @@ loadstring(Module)()
   - Critizating my code.
 
 # Official Support
-  - For frequently asked questions and documentation, [reach out to this file.](https://github.com/KadeTheExploiter/Krypton/blob/main/Documentation.md)
-  - Discord: https://discord.gg/ArpG4kDvW2
+  #### Frequently asked questions and documentation, [Click there](https://github.com/KadeTheExploiter/Krypton/blob/main/Documentation.md)
+  #### Discord server, [Click there](https://discord.gg/ArpG4kDvW2)
