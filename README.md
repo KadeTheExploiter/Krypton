@@ -20,13 +20,13 @@ https://www.roblox.com/catalog/13421786478/Extra-Torso-Blocky
 
 Configuration = {}
 Configuration.ReturnOnDeath = true
-Configuration.Flinging = true
+Configuration.Flinging = false
 Configuration.Animations = true
 Configuration.WaitTime = 0.2509
 Configuration.RigName = "FakeRig"
 Configuration.TeleportOffsetRadius = 25
 Configuration.NoCollisions = true
-Configuration.AntiVoiding = true
+Configuration.AntiVoiding = false
 Configuration.SetSimulationRadius = true
 Configuration.DisableCharacterScripts = true
 Configuration.Hats = nil -- use the default ones for now pls (they are on discord server)
