@@ -1,15 +1,15 @@
--- Version: 1.3
--- Beta release, known bugs: You can fling yourself, that's it.
 -- // Defining Variables: Settings
-
 local Configuration = Configuration or {}
 local ReturnOnDeath = Configuration.ReturnOnDeath or true
 local Flinging = Configuration.Flinging or true
 local Animations = Configuration.Animations or true
 local WaitTime = Configuration.WaitTime or 0.2509
-local RigName = Configuration.RigName or "FakeRig" -- sets name for the rig
+local RigName = Configuration.RigName or "FakeRig"
+local NoCollisions = Configuration.NoCollisions or Flinging or false
+local AntiVoiding = Configuration.AntiVoiding or true
+local SetSimulationRadius = Configuration.SetSimulationRadius or false
+local DisableCharacterScripts = Configuration.DisableCharacterScripts or false
 local TeleportOffsetRadius = Configuration.TeleportOffsetRadius or 25
-
 local Hats =  Configuration.Hats or {
 	["Right Arm"] = {
 		{Texture = "rbxassetid://14255544465", Mesh = "rbxassetid://14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))}
@@ -56,7 +56,6 @@ local StarterGui = game:FindFirstChildOfClass("StarterGui")
 local Camera = Workspace.CurrentCamera
 local PreviousCameraCFrame = Camera.CFrame
 
-local WalkOffset = CFrame.identity
 local TeleportOffset = CFrame.identity
 
 local ReverseSleep = Vector3.zero
@@ -66,21 +65,21 @@ local MouseDown = nil
 local Shiftlock = nil
 local ReadyToClaim = nil
 local AnimationHandlingFunction = nil
+local IsMovementKeyPressed = nil
 
-local MovementMulitply = 9e9
-local PlayerPing = 50
+local FlingPrediction = 50
 local SafeYAxis = 27
 
 local RespawnEvent = Instance.new("BindableEvent")
-local DefaultMovementValues = {0,0}
 local CurrentMovement = {0,0}
+
 local RBXSignals = {}
 local HatsInUse = {}
 local KeyInputs = {
-	['W'] = {Enum.KeyCode.W, {0, 1e4}, false},
-	['A'] = {Enum.KeyCode.A, {1e4, 0}, false},
-	['S'] = {Enum.KeyCode.S, {0, -1e4}, false},
-	['D'] = {Enum.KeyCode.D, {-1e4, 0}, false},
+	['W'] = {Enum.KeyCode.W, {0, -1}, false},
+	['A'] = {Enum.KeyCode.A, {-1, 0}, false},
+	['S'] = {Enum.KeyCode.S, {0, 1}, false},
+	['D'] = {Enum.KeyCode.D, {1, 0}, false},
 	['Space'] = {Enum.KeyCode.Space, nil, false},
 }
 
@@ -92,10 +91,13 @@ local PrimaryPart = Character.PrimaryPart
 local Humanoid = GetInstanceWithTime(Character, "Humanoid", nil, 3)
 local RootPart = GetInstanceWithTime(Character, "Part", "HumanoidRootPart", 3)
 
+local CFrameBackup = AntiVoiding and PrimaryPart.CFrame or nil
+local CanCallSimRadius = SetSimulationRadius and pcall(function() Player.SimulationRadius = 1000 end) or nil
 -- // RunTime: Creating FakeRig
 
 local FakeRig = Instance.new("Model")
 local FakeHumanoid = Instance.new("Humanoid")
+local FakeRigChildren = nil
 local FakeRoot = nil
 
 local function CancelScript()
@@ -155,8 +157,8 @@ do -- [[ Scoped Rig Creating. ]]
 	RightArm.Size = Vector3.new(1,2,1)
 
 	Head.Transparency = 1
-	Torso.Transparency = 1
-	RightArm.Transparency = 1
+	Torso.Transparency = 0.5
+	RightArm.Transparency = 0.5
 
 	FakeRoot = Torso:Clone()
 	FakeRoot.CanCollide = false
@@ -216,9 +218,9 @@ do -- [[ Scoped Rig Creating. ]]
 	Animate.Name = "Animate"
 	Animate.Parent = FakeRig
 
-	FakeRigDescendants = FakeRig:GetDescendants()
 	FakeRoot.CFrame = PrimaryPart.CFrame * CFrame.new(0, 0.1, 0)
 	FakeRig.Name = RigName
+	FakeRig.PrimaryPart = Head
 	FakeRig.Parent = workspace
 
 	FakeHumanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
@@ -578,34 +580,60 @@ local function OnPostSimulation() -- SIGNAL: RunService.PostSimulation
 	PrimaryPart = Character and Character.PrimaryPart or nil
 	
 	for Handle, Data in next, HatsInUse do
-		local OtherLimb = Data[1]		
-		local HandleMass = OtherLimb.Size.Magnitude * 4
-		local Velocity = OtherLimb.AssemblyLinearVelocity * HandleMass
-		
-		local YValue = math.clamp(Velocity.Y, SafeYAxis, 1024)
+		local OtherLimb = Data[1]
 
-		if IsNetworkOwner(Handle) then
-			local CFrameOffset = ReadyToClaim and OtherLimb.CFrame * Data[2] or PrimaryPart and PrimaryPart.CFrame
+		if OtherLimb then
+			local HandleMass = OtherLimb.Size.Magnitude * 4
+			local Velocity = OtherLimb.AssemblyLinearVelocity * HandleMass
+			
+			local YValue = math.clamp(Velocity.Y, SafeYAxis, 1024)
 
-			Handle.AssemblyLinearVelocity = ReadyToClaim and Vector3.new(Velocity.X, YValue, Velocity.Z) or SafeVector 
-			Handle.AssemblyAngularVelocity = ReadyToClaim and OtherLimb.AssemblyAngularVelocity or SafeVector -- claim
-			Handle.CFrame = Handle.CFrame:Lerp(CFrameOffset + ReverseSleep, 1)
-		end 
+			if IsNetworkOwner(Handle) then
+				local CFrameOffset = ReadyToClaim and OtherLimb.CFrame * Data[2] or PrimaryPart and PrimaryPart.CFrame
+
+				Handle.AssemblyLinearVelocity = ReadyToClaim and Vector3.new(Velocity.X, YValue, Velocity.Z) or SafeVector 
+				Handle.AssemblyAngularVelocity = ReadyToClaim and OtherLimb.AssemblyAngularVelocity or SafeVector -- claim
+				Handle.CFrame = Handle.CFrame:Lerp(CFrameOffset + ReverseSleep, 1)
+			end 
+		end
 	end
 	
-	ReverseSleep = Vector3.new(0.0075 * math.sin(os.clock() * 8), 0, 0.0075 * math.cos(os.clock() * 16))
+	ReverseSleep = Vector3.new(0.0075 * math.sin(os.clock() * 7), 0, 0.0075 * math.cos(os.clock() * 16))
 	SafeYAxis = 40 - 3 * math.sin(os.clock() * 10)
 	
-	--Player.SimulationRadius = 1000
+	if CanCallSimRadius then
+		Player.MaximumSimulationRadius = 16384
+		Player.SimulationRadius = 16384
+	end
 end
 
 local function OnPreSimulation() -- SIGNAL: RunService.PreSimulation
-	Shiftlock = UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter
-	FakeHumanoid.AutoRotate = not Shiftlock
-	PlayerPing = Player:GetNetworkPing() * math.random(20,35)
+	if NoCollisions and FakeRigChildren then
+		for _, Part in next, FakeRigChildren do
+			if Part and Part.Parent and Part:IsA("BasePart") then
+				Part.CanCollide = false
+				Part.CanTouch = false
+				Part.CanQuery = false
+			end
+		end
+	end
 
+	if AntiVoiding then
+		if FakeRoot.Position.Y < Workspace.FallenPartsDestroyHeight + 75 then
+			FakeRoot.CFrame = CFrameBackup
+			FakeRoot.AssemblyLinearVelocity = Vector3.zero
+			FakeRoot.AssemblyAngularVelocity = Vector3.zero
+		end
+	end
+
+	IsMovementKeyPressed = KeyInputs["W"][3] or KeyInputs["A"][3] or KeyInputs["S"][3] or KeyInputs["D"][3]
+	Shiftlock = UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter
+	FlingPrediction = Player:GetNetworkPing() * math.random(20, 35)
+
+	FakeHumanoid.AutoRotate = not Shiftlock
+	
 	local LookVector = Camera.CFrame.LookVector
-	local X, Z = CurrentMovement[1], CurrentMovement[2]
+	local ShiftlockCalc = FakeRoot.CFrame * CFrame.Angles(0, math.atan2(-LookVector.X, -LookVector.Z), 0)
 
 	for _, Value in next, KeyInputs do
 		if Value[2] and Value[3] then
@@ -614,69 +642,54 @@ local function OnPreSimulation() -- SIGNAL: RunService.PreSimulation
 		end
 	end
 
-	local Magnitude = math.sqrt(CurrentMovement[1]^2 + CurrentMovement[2]^2)
+	local Movement = Vector3.new(CurrentMovement[1], 0, CurrentMovement[2])
+	local Magnitude = Movement.Magnitude
 
-	if Magnitude > 1e4 then
-		CurrentMovement[1] = CurrentMovement[1] / Magnitude * 1e4
-		CurrentMovement[2] = CurrentMovement[2] / Magnitude * 1e4
+	if Magnitude > 1 then
+		CurrentMovement = {CurrentMovement[1] / 2, CurrentMovement[2] / 2}
 	end
 
 	FakeHumanoid.Jump = KeyInputs["Space"][3]
 
-	local ShiftlockCalc = CFrame.new(FakeRoot.Position) * CFrame.Angles(0, math.atan2(-LookVector.X, -LookVector.Z), 0) -- after searching, seems like i need to calc the yaw angle
-	local IsMovementKeyPressed = KeyInputs["W"][3] or KeyInputs["A"][3] or KeyInputs["S"][3] or KeyInputs["D"][3]
-	WalkOffset = WalkOffset * CFrame.new(-X, 0,-Z)
-
 	if Shiftlock then
 		FakeRoot.CFrame = ShiftlockCalc
 	end
-
-	FakeHumanoid.WalkToPoint = IsMovementKeyPressed and WalkOffset.Position or FakeRoot.Position
-
-	CurrentMovement = DefaultMovementValues
-	WalkOffset = CFrame.new(FakeRoot.Position, Vector3.new(LookVector.X * MovementMulitply, LookVector.Y, LookVector.Z * MovementMulitply))
+	
+	FakeHumanoid:Move(IsMovementKeyPressed and Movement or Vector3.zero, true)
 end
-
+ 
 local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
+	ReadyToClaim = false
+	table.clear(HatsInUse)
+
 	PreviousCameraCFrame = Camera.CFrame
 	Camera.CameraSubject = FakeHumanoid
-
 	Camera:GetPropertyChangedSignal("CFrame"):Wait()
 	Camera.CFrame = PreviousCameraCFrame
-
 	SetCameraTarget()
-	ReadyToClaim = false
 
-	table.clear(HatsInUse)
 	Character = Player.Character
-	Character:FindFirstChildOfClass("Accessory")
-
 	Humanoid = GetInstanceWithTime(Character, "Humanoid", nil, 3)
 	RootPart = GetInstanceWithTime(Character, "Part", "HumanoidRootPart", 3)
+	if not RootPart or not Humanoid then -- Script Cancelled, Lack of needed Instances.
+		CancelScript();
+		return
+	end
 
-	if not RootPart or not Humanoid then
-		warn("Script Cancelled, Lack of needed Instances.")
-
-		CancelScript(); return
+	if DisableCharacterScripts then
+		for _, v in next, Character:GetDescendants() do
+			if v:IsA("LocalScript") then
+				v.Disabled = false
+			end
+		end	
 	end
 
 	if Flinging then
-		Instance.new("SelectionBox", RootPart).Adornee = RootPart
-		local Children = Character:GetChildren()
 		local TemporarySignal = nil
+		
 		TemporarySignal = RunService.PostSimulation:Connect(function()
-			for _, Part in next, Children do
-				if Part:IsA("Part") then
-					Part.CanCollide = false
-					Part.CanQuery = false
-					Part.CanTouch = false
-				end
-			end
-
-			if MouseDown then
-				local Target = Mouse.Target
-					-- prob unoptimized but doesnt matter honestly its better to not get any error
-					
+			if MouseDown then -- prob unoptimized but doesnt matter honestly its better to not get any error
+				local Target = Mouse.Target 
 				local Target_P = Target and Target.Parent and Target.Parent:IsDescendantOf(workspace) and Target.Parent
 				local Target_PP = Target_P and Target_P.Parent and Target_P.Parent:IsDescendantOf(workspace) and Target_P.Parent
 				local NewTarget = Target_P and Target_P:FindFirstChildOfClass("Humanoid") or Target_PP and Target_PP:FindFirstChildOfClass("Humanoid") or nil
@@ -685,7 +698,7 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 					local Part = GetFirstPart(NewTarget.Parent)
 
 					if Part then
-						RootPart.CFrame = CFrame.new(Part.Position + Part.AssemblyLinearVelocity * PlayerPing)
+						RootPart.CFrame = CFrame.new(Part.Position + Part.AssemblyLinearVelocity * FlingPrediction)
 					else
 						RootPart.CFrame = CFrame.new(Mouse.Hit.Position)
 					end
@@ -703,11 +716,10 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 		repeat task.wait() until TemporarySignal == nil
 	end
 
-	local Number = TeleportOffsetRadius -- i dont like mess...
-	TeleportOffset = FakeRoot.CFrame * CFrame.new(math.random(-Number, Number), 0.25, math.random(-Number, Number))
+	TeleportOffset = FakeRoot.CFrame * CFrame.new(math.random(-TeleportOffsetRadius, TeleportOffsetRadius), 0.25, math.random(-TeleportOffsetRadius, TeleportOffsetRadius))
 
 	while ArePlayersNearby() do
-		TeleportOffset = FakeRoot.CFrame * CFrame.new(math.random(-Number, Number), 0.25, math.random(-Number, Number))
+		TeleportOffset = FakeRoot.CFrame * CFrame.new(math.random(-TeleportOffsetRadius, TeleportOffsetRadius), 0.25, math.random(-TeleportOffsetRadius, TeleportOffsetRadius))
 		task.wait()
 	end
 
@@ -724,10 +736,11 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 		end
 	end
 
+
 	SetUpHatConfig()
-
+	FakeRigChildren = FakeRig:GetChildren()
+	
 	task.wait(WaitTime/2)
-
 	ReadyToClaim = true
 end
 
@@ -748,7 +761,6 @@ local function UponParentChange()
 end
 
 -- // RunTime: Connecting Events
-
 SetCameraTarget()
 SetUpHatConfig()
 
@@ -761,12 +773,11 @@ RBXSignals[#RBXSignals+1] = Camera:GetPropertyChangedSignal("CameraSubject"):Con
 RBXSignals[#RBXSignals+1] = FakeRig:GetPropertyChangedSignal("Parent"):Connect(UponParentChange)
 RBXSignals[#RBXSignals+1] = RespawnEvent.Event:Connect(CancelScript)
 RBXSignals[#RBXSignals+1] = Player.Chatted:Connect(OnChatted)
-
 RBXSignals[#RBXSignals+1] = UserInputService.InputBegan:Connect(function(Input, GameProcessed) OnInputChange(Input, not GameProcessed, true) end)
 RBXSignals[#RBXSignals+1] = UserInputService.InputEnded:Connect(function(Input, GameProcessed) OnInputChange(Input, not GameProcessed, false) end)
-
 
 -- // End: Finalizing
 
 task.wait(WaitTime)
+FakeRigChildren = FakeRig:GetChildren()
 ReadyToClaim = true
