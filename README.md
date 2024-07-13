@@ -20,13 +20,13 @@ https://www.roblox.com/catalog/13421786478/Extra-Torso-Blocky
 
 Configuration = {}
 Configuration.ReturnOnDeath = true
-Configuration.Flinging = false
+Configuration.Flinging = true
 Configuration.Animations = true
 Configuration.WaitTime = 0.2509
 Configuration.RigName = "FakeRig"
 Configuration.TeleportOffsetRadius = 25
 Configuration.NoCollisions = true
-Configuration.AntiVoiding = false
+Configuration.AntiVoiding = true
 Configuration.SetSimulationRadius = true
 Configuration.DisableCharacterScripts = true
 Configuration.Hats = nil -- use the default ones for now pls (they are on discord server)
@@ -53,4 +53,5 @@ loadstring(Module)()
   - Critizating my code.
 
 # Official Support
-- Discord: https://discord.gg/ArpG4kDvW2
+  - For frequently asked questions and documentation, [reach out to this file.](https://github.com/KadeTheExploiter/Krypton/blob/main/Documentation.md)
+  - Discord: https://discord.gg/ArpG4kDvW2
