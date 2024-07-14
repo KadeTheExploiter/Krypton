@@ -117,6 +117,7 @@ local FakeRoot = nil
 local function CancelScript()  -- : nil
 	for _, v in next, RBXSignals do
 		v:Disconnect()
+		v = nil
 	end
 
 	if ReturnOnDeath then
