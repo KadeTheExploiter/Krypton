@@ -1,5 +1,4 @@
 -- // Defining Variables: Settings
-
 local Configuration = Configuration or {}
 local ReturnOnDeath = Configuration.ReturnOnDeath or false
 local Flinging = Configuration.Flinging or true
@@ -682,7 +681,7 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 	Character = Player.Character
 	Humanoid = GetInstanceWithTime(Character, "Humanoid", nil, 3)
 	RootPart = GetInstanceWithTime(Character, "Part", "HumanoidRootPart", 3)
-	
+
 	if DisableCharacterScripts then
 		for _, v in next, Character:GetDescendants() do
 			if BetterIsA(v, "LocalScript") then
