@@ -1,16 +1,17 @@
 -- // Defining Variables: Settings
+
 local Configuration = Configuration or {}
-local ReturnOnDeath = Configuration.ReturnOnDeath or true
+local ReturnOnDeath = Configuration.ReturnOnDeath or false
 local Flinging = Configuration.Flinging or true
-local Animations = Configuration.Animations or true
+local Animations = Configuration.Animations or false
 local WaitTime = Configuration.WaitTime or 0.2509
-local RigName = Configuration.RigName or "FakeRig"
+local RigName = Configuration.RigName or "Evolution, it must've passed you by."
 local NoCollisions = Configuration.NoCollisions or Flinging or false
-local AntiVoiding = Configuration.AntiVoiding or true
+local AntiVoiding = Configuration.AntiVoiding or false
 local SetSimulationRadius = Configuration.SetSimulationRadius or false
 local DisableCharacterScripts = Configuration.DisableCharacterScripts or false
-local TeleportOffsetRadius = Configuration.TeleportOffsetRadius or 25
-local Hats =  Configuration.Hats or {
+local TeleportOffsetRadius = Configuration.TeleportOffsetRadius or 22
+local Hats = Configuration.Hats or {
 	["Right Arm"] = {
 		{Texture = "rbxassetid://14255544465", Mesh = "rbxassetid://14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))}
 	},
@@ -34,12 +35,35 @@ local Hats =  Configuration.Hats or {
 
 -- // Defining Variables: Game Related
 
+local function BetterFindFirstChildOfClass(Parent, ClassName) -- <Any> <String> : Instance
+	if Parent then
+		local Value = Parent:FindFirstChildOfClass(ClassName)
+		if Value then
+			return Value
+		end
+	end
+
+	return nil
+end
+
+local function BetterIsA(Instance, ClassName) -- <Any> <String> : Instance
+	if Instance then
+		local Parent = Instance.Parent
+
+		if Parent then
+			return Instance:IsA(ClassName)
+		end
+	end
+
+	return nil
+end
+
 local function GetInstanceWithTime(Parent, Class, Name, Timeout)
 	local CurTime = 0
 
 	while Timeout > CurTime do
 		for _, v in next, Parent:GetChildren() do
-			if v:IsA(Class) and v.Name == (Name or v.Name) then
+			if BetterIsA(v, Class) and v.Name == (Name or v.Name) then
 				return v
 			end
 		end
@@ -49,59 +73,48 @@ local function GetInstanceWithTime(Parent, Class, Name, Timeout)
 end
 
 local Workspace = workspace
-local Players = game:FindFirstChildOfClass("Players")
-local RunService = game:FindFirstChildOfClass("RunService")
-local UserInputService = game:FindFirstChildOfClass("UserInputService")
-local StarterGui = game:FindFirstChildOfClass("StarterGui")
+local Players = BetterFindFirstChildOfClass(game, "Players")
+local RunService = BetterFindFirstChildOfClass(game, "RunService")
+local UserInputService = BetterFindFirstChildOfClass(game, "UserInputService")
+local StarterGui = BetterFindFirstChildOfClass(game, "StarterGui")
 local Camera = Workspace.CurrentCamera
 local PreviousCameraCFrame = Camera.CFrame
 
 local TeleportOffset = CFrame.identity
 
-local ReverseSleep = Vector3.zero
-local SafeVector = Vector3.new(0,30,0)
-
 local MouseDown = nil
-local Shiftlock = nil
-local ReadyToClaim = nil
+local SpacePressed = nil
+local SafeToLoad = nil
 local AnimationHandlingFunction = nil
-local IsMovementKeyPressed = nil
 
-local FlingPrediction = 50
-local SafeYAxis = 27
+local RecoverTime = WaitTime/1.75
 
 local RespawnEvent = Instance.new("BindableEvent")
-local CurrentMovement = {0,0}
 
 local RBXSignals = {}
 local HatsInUse = {}
-local KeyInputs = {
-	['W'] = {Enum.KeyCode.W, {0, -1}, false},
-	['A'] = {Enum.KeyCode.A, {-1, 0}, false},
-	['S'] = {Enum.KeyCode.S, {0, 1}, false},
-	['D'] = {Enum.KeyCode.D, {1, 0}, false},
-	['Space'] = {Enum.KeyCode.Space, nil, false},
-}
 
+local KeyInputs = {[Enum.KeyCode.W] = {false, 0, -1}, [Enum.KeyCode.A] = {false, -1, 0}, [Enum.KeyCode.S] = {false, 0, 1}, [Enum.KeyCode.D] = {false, 1, 0}}
 
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
 local Character = Player.Character
-local PrimaryPart = Character.PrimaryPart
 local Humanoid = GetInstanceWithTime(Character, "Humanoid", nil, 3)
 local RootPart = GetInstanceWithTime(Character, "Part", "HumanoidRootPart", 3)
 
-local CFrameBackup = AntiVoiding and PrimaryPart.CFrame or nil
+local CFrameBackup = AntiVoiding and RootPart.CFrame or nil
+local FallenPartsDestroyHeight = Workspace.FallenPartsDestroyHeight + 75
 local CanCallSimRadius = SetSimulationRadius and pcall(function() Player.SimulationRadius = 1000 end) or nil
+
 -- // RunTime: Creating FakeRig
 
 local FakeRig = Instance.new("Model")
 local FakeHumanoid = Instance.new("Humanoid")
-local FakeRigChildren = nil
+local FakeRigChildren = {}
 local FakeRoot = nil
 
 local function CancelScript()
-	for _, v in next, RBXSignals do
+	for i, v in next, RBXSignals do
 		v:Disconnect()
 	end
 
@@ -196,35 +209,43 @@ do -- [[ Scoped Rig Creating. ]]
 	local RightHip = MakeMotor6D('Right Hip', Torso, RightLeg, CFrame.new(1, -1, 0, 0, 0, 1, 0, 1, -0, -1, 0, 0), CFrame.new(0.5, 1, 0, 0, 0, 1, 0, 1, -0, -1, 0, 0))
 	local LeftHip = MakeMotor6D('Left Hip', Torso, LeftLeg, CFrame.new(-1, -1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0), CFrame.new(-0.5, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0))
 
-	MakeAttachment("HairAttachment", CFrame.new(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head)
-	MakeAttachment("HatAttachment", CFrame.new(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head)
-	MakeAttachment("FaceFrontAttachment", CFrame.new(0, 0, -0.6, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head)
-	MakeAttachment("RootAttachment", CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FakeRoot)
-	MakeAttachment("LeftShoulderAttachment", CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftArm)
-	MakeAttachment("LeftGripAttachment", CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftArm)
-	MakeAttachment("RightShoulderAttachment", CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightArm)
-	MakeAttachment("RightGripAttachment", CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightArm)
-	MakeAttachment("LeftFootAttachment", CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftLeg)	
-	MakeAttachment("RightFootAttachment", CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightLeg)
-	MakeAttachment("NeckAttachment", CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso)
-	MakeAttachment("BodyFrontAttachment", CFrame.new(0, 0, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso)
-	MakeAttachment("BodyBackAttachment", CFrame.new(0, 0, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso)
-	MakeAttachment("LeftCollarAttachment", CFrame.new(-1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso)
-	MakeAttachment("RightCollarAttachment", CFrame.new(1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso)
-	MakeAttachment("WaistFrontAttachment", CFrame.new(0, -1, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso)
-	MakeAttachment("WaistCenterAttachment", CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso)
-	MakeAttachment("WaistBackAttachment", CFrame.new(0, -1, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso)
-
 	Animate.Name = "Animate"
 	Animate.Parent = FakeRig
 
-	FakeRoot.CFrame = PrimaryPart.CFrame * CFrame.new(0, 0.1, 0)
+	FakeRoot.CFrame = RootPart.CFrame * CFrame.new(0, 0.1, 0)
 	FakeRig.Name = RigName
 	FakeRig.PrimaryPart = Head
 	FakeRig.Parent = workspace
 
 	FakeHumanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
 	FakeHumanoid:ChangeState(Enum.HumanoidStateType.Landed)
+
+	local Attachments = {
+		["HairAttachment"] = { CFrame.new(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head },
+		["HatAttachment"] = { CFrame.new(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head },
+		["FaceFrontAttachment"] = { CFrame.new(0, 0, -0.6, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head },
+		["RootAttachment"] = { CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FakeRoot },
+		["LeftShoulderAttachment"] = { CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftArm },
+		["LeftGripAttachment"] = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftArm },
+		["RightShoulderAttachment"] = { CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightArm },
+		["RightGripAttachment"] = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightArm },
+		["LeftFootAttachment"] = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftLeg },
+		["RightFootAttachment"] = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightLeg },
+		["NeckAttachment"] = { CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
+		["BodyFrontAttachment"] = { CFrame.new(0, 0, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
+		["BodyBackAttachment"] = { CFrame.new(0, 0, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
+		["LeftCollarAttachment"] = { CFrame.new(-1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
+		["RightCollarAttachment"] = { CFrame.new(1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
+		["WaistFrontAttachment"] = { CFrame.new(0, -1, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
+		["WaistCenterAttachment"] = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
+		["WaistBackAttachment"] = { CFrame.new(0, -1, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso }
+	}
+
+	for Name, Table in next, Attachments do
+		MakeAttachment(Name, Table[1], Table[2])
+	end
+
+	table.clear(Attachments)
 
 	if Animations then
 		task.delay(1, function()
@@ -263,13 +284,6 @@ do -- [[ Scoped Rig Creating. ]]
 			end
 		
 			local function PlayAnimation(AnimName, TransitionTime, humanoid)
-				local Roll = math.random(1, 10)
-				local Idx = 1
-				while Roll > 10 do
-					Roll = Roll - 10
-					Idx = Idx + 1
-				end
-
 				local Anim = AnimationTable[AnimName].Anim
 
 				if Anim ~= CurrentAnimInstance then
@@ -310,7 +324,6 @@ do -- [[ Scoped Rig Creating. ]]
 			local function OnFallingDown() if AnimationsToggled then Pose = "FallingDown" end end
 			local function OnSeated() if AnimationsToggled then Pose = "Seated" end end
 			local function OnPlatformStanding() if AnimationsToggled then Pose = "PlatformStanding" end end
-
 			local function OnRunning(Speed)
 				if AnimationsToggled then
 					if Speed > 0.01 then
@@ -376,7 +389,7 @@ do -- [[ Scoped Rig Creating. ]]
 				end
 			end
 		
-			RBXSignals[#RBXSignals+1] = RunService.PostSimulation:Connect(function(DeltaTime)
+			RBXSignals[1] = RunService.PostSimulation:Connect(function(DeltaTime)
 				AnimationsToggled = (Animate and Animate.Parent) and Animate.Enabled or false
 				local Amplitude = 1
 				local SetAngles = false
@@ -426,17 +439,16 @@ do -- [[ Scoped Rig Creating. ]]
 end
 
 -- // RunTime: Functions
-
 local function IsNetworkOwner(Part)  -- <BasePart> : Boolean
 	return Part and Part.ReceiveAge == 0
 end
 
 local function GetFirstPart(Parent) -- <Any> : Part | BasePart
-	return Parent:FindFirstChild("Handle") or Parent:FindFirstChildOfClass("Part")
+	return Parent:FindFirstChild("Handle") or BetterFindFirstChildOfClass(Parent, "Part")
 end
 
 local function GetFirstWeld(Parent) -- <Any> :  Weld | ManualWeld
-	return Parent:FindFirstChild("AccessoryWeld") or Parent:FindFirstChildOfClass("Weld") or Parent:FindFirstChildOfClass("ManualWeld")
+	return Parent:FindFirstChild("AccessoryWeld") or BetterFindFirstChildOfClass(Parent, "Weld") or BetterFindFirstChildOfClass(Parent, "ManualWeld")
 end
 
 local function DestroyWeld(Parent) -- <Instance>
@@ -449,9 +461,9 @@ end
 
 local function ObtainMeshAndTextureOfAccessory(Accessory) -- <Accessory> : {MeshId: string, TextureId: string}
 	local Handle = Accessory:FindFirstChild("Handle")
-	local IfMesh = Handle:FindFirstChildOfClass("SpecialMesh")
+	local IfMesh = BetterFindFirstChildOfClass(Handle, "SpecialMesh")
 
-	if Handle:IsA("MeshPart") then
+	if BetterIsA(Handle, "MeshPart") then
 		return {MeshId = Handle.MeshId, TextureId = Handle.TextureID}
 	elseif IfMesh then
 		return {MeshId = IfMesh.MeshId, TextureId = IfMesh.TextureId}
@@ -462,7 +474,7 @@ end
 
 local function FindAccessory(FromWhere, Texture, Mesh, Name) -- <Instance> <string> <string> <string> : Accessory
 	for _, x in next, FromWhere:GetChildren() do
-		if x:IsA("Accessory") and x.Name == Name then
+		if BetterIsA(x, "Accessory") and x.Name == Name then
 			local HatData = ObtainMeshAndTextureOfAccessory(x)
 
 			if string.match(HatData.MeshId, Mesh) and string.match(HatData.TextureId, Texture) then
@@ -484,7 +496,7 @@ local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
 	local FakeAccessory = Accessory:Clone()
 	local FakeHandle = GetFirstPart(FakeAccessory)
 
-	local FakeAttachment = FakeHandle:FindFirstChildOfClass("Attachment")
+	local FakeAttachment = BetterFindFirstChildOfClass(FakeHandle, "Attachment")
 	local FakeHandleWeld = Instance.new("Weld")
 
 	DestroyWeld(FakeHandle)
@@ -515,6 +527,12 @@ local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
 end
 
 local function SetUpHatConfig()
+	for _, Hat in next, FakeRig:GetDescendants() do
+		if BetterIsA(Hat, "Accessory") then
+			Hat:Destroy()
+		end
+	end
+
 	for Index, x in next, Hats do
 		for _, Info in next, x do
 			local Accessory = FindAccessory(Character, Info.Texture, Info.Mesh, Info.Name)
@@ -530,7 +548,7 @@ local function SetUpHatConfig()
 	end
 
 	for _, v in next, Character:GetChildren() do
-		if v:IsA("Accessory") then
+		if BetterIsA(v, "Accessory") then
 			local Handle = GetFirstPart(v)
 
 			if not HatsInUse[Handle] then
@@ -550,7 +568,7 @@ local function ArePlayersNearby()
 	for _, v in next, PartsOnTheWay do
 		local Model = v.Parent
 
-		if Model:IsA("Model") and Model.Name ~= Player.Name and Model.PrimaryPart ~= nil then
+		if BetterIsA(v, "Model") and Model.Name ~= Player.Name and Model.PrimaryPart ~= nil then
 			return true
 		end
 	end
@@ -558,59 +576,73 @@ local function ArePlayersNearby()
 	return false
 end
 
+local function GetRandomRadius()
+	return CFrame.new(math.random(-TeleportOffsetRadius, TeleportOffsetRadius), 0.5, math.random(-TeleportOffsetRadius, TeleportOffsetRadius))
+end
 -- // RunTime: Event functions
 
 local function SetCameraTarget() -- Function | SIGNAL: Camera:GetPropertySignalChanged("CameraSubject")
+	PreviousCameraCFrame = Camera.CFrame
 	Camera.CameraSubject = FakeHumanoid
+	Camera:GetPropertyChangedSignal("CFrame"):Wait()
+	Camera.CFrame = PreviousCameraCFrame
 end
 
 local function OnInputChange(Input, GameProcessed, Bool) -- SIGNAL: UIS.InputBegan | UIS.InputEnded
-	if GameProcessed and Input.UserInputType == Enum.UserInputType.MouseButton1 then
-		MouseDown = Bool
-	end
+	if GameProcessed then
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			MouseDown = Bool
+		elseif Input.KeyCode == Enum.KeyCode.Space then
+			SpacePressed = Bool
+		end
 
-	for _, v in next, KeyInputs do
-		if GameProcessed and Input.KeyCode == v[1] then
-			v[3] = Bool
+		for MyInput, Table in next, KeyInputs do
+			if Input.KeyCode == MyInput then
+				Table[1] = Bool
+			end
 		end
 	end
 end
 
 local function OnPostSimulation() -- SIGNAL: RunService.PostSimulation
-	PrimaryPart = Character and Character.PrimaryPart or nil
-	
-	for Handle, Data in next, HatsInUse do
-		local OtherLimb = Data[1]
-
-		if OtherLimb then
-			local HandleMass = OtherLimb.Size.Magnitude * 4
-			local Velocity = OtherLimb.AssemblyLinearVelocity * HandleMass
-			
-			local YValue = math.clamp(Velocity.Y, SafeYAxis, 1024)
-
-			if IsNetworkOwner(Handle) then
-				local CFrameOffset = ReadyToClaim and OtherLimb.CFrame * Data[2] or PrimaryPart and PrimaryPart.CFrame
-
-				Handle.AssemblyLinearVelocity = ReadyToClaim and Vector3.new(Velocity.X, YValue, Velocity.Z) or SafeVector 
-				Handle.AssemblyAngularVelocity = ReadyToClaim and OtherLimb.AssemblyAngularVelocity or SafeVector -- claim
-				Handle.CFrame = Handle.CFrame:Lerp(CFrameOffset + ReverseSleep, 1)
-			end 
-		end
-	end
-	
-	ReverseSleep = Vector3.new(0.0075 * math.sin(os.clock() * 7), 0, 0.0075 * math.cos(os.clock() * 16))
-	SafeYAxis = 40 - 3 * math.sin(os.clock() * 10)
-	
+	StarterGui:SetCore("ResetButtonCallback", RespawnEvent)
+	local Multiply = SafeToLoad and 4 or 1
+	local ReverseSleep = Vector3.new(0.0075 * math.sin(os.clock() * 7), 0, 0.0075 * math.cos(os.clock() * 16))
+	local SafeYAxis = 35 - 3 * math.sin(os.clock() * 10)
+		
 	if CanCallSimRadius then
 		Player.MaximumSimulationRadius = 16384
 		Player.SimulationRadius = 16384
 	end
+
+	for Handle, Data in next, HatsInUse do
+		local OtherLimb = Data[1]
+
+		if OtherLimb and IsNetworkOwner(Handle) then
+			local Part1Offset = Data[2]
+			local Part1Magnitude = OtherLimb.Size.Magnitude
+			local Part1Velocity = OtherLimb.AssemblyLinearVelocity * Part1Magnitude
+			local CalculatedVel = Part1Velocity * Multiply
+
+			local ClampedAxisY = math.clamp(Part1Velocity.Y, SafeYAxis, 1200)
+			local Velocity = Vector3.new(CalculatedVel.X, ClampedAxisY, CalculatedVel.Z)
+
+			local CFrameOffset = OtherLimb.CFrame * Part1Offset
+
+			Handle.AssemblyLinearVelocity = Velocity
+			Handle.AssemblyAngularVelocity = OtherLimb.AssemblyAngularVelocity
+			Handle.CFrame = SafeToLoad and Handle.CFrame:Lerp(CFrameOffset + ReverseSleep, 1) or RootPart.CFrame
+		end
+	end
 end
 
 local function OnPreSimulation() -- SIGNAL: RunService.PreSimulation
-	if NoCollisions and FakeRigChildren then
+	local MovementVector = Vector3.zero
+	local Shiftlock = UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter
+
+	if NoCollisions then
 		for _, Part in next, FakeRigChildren do
-			if Part and Part.Parent and Part:IsA("BasePart") then
+			if BetterIsA(Part, "Part") then
 				Part.CanCollide = false
 				Part.CanTouch = false
 				Part.CanQuery = false
@@ -618,108 +650,97 @@ local function OnPreSimulation() -- SIGNAL: RunService.PreSimulation
 		end
 	end
 
-	if AntiVoiding then
-		if FakeRoot.Position.Y < Workspace.FallenPartsDestroyHeight + 75 then
-			FakeRoot.CFrame = CFrameBackup
-			FakeRoot.AssemblyLinearVelocity = Vector3.zero
-			FakeRoot.AssemblyAngularVelocity = Vector3.zero
-		end
+	if AntiVoiding and FakeRoot.Position.Y < FallenPartsDestroyHeight then
+		FakeRoot.CFrame = CFrameBackup
+		FakeRoot.AssemblyLinearVelocity = MovementVector
+		FakeRoot.AssemblyAngularVelocity = MovementVector
 	end
-
-	IsMovementKeyPressed = KeyInputs["W"][3] or KeyInputs["A"][3] or KeyInputs["S"][3] or KeyInputs["D"][3]
-	Shiftlock = UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter
-	FlingPrediction = Player:GetNetworkPing() * math.random(20, 35)
 
 	FakeHumanoid.AutoRotate = not Shiftlock
-	
-	local LookVector = Camera.CFrame.LookVector
-	local ShiftlockCalc = FakeRoot.CFrame * CFrame.Angles(0, math.atan2(-LookVector.X, -LookVector.Z), 0)
+	FakeHumanoid.Jump = SpacePressed
 
-	for _, Value in next, KeyInputs do
-		if Value[2] and Value[3] then
-			CurrentMovement[1] = CurrentMovement[1] + Value[2][1]
-			CurrentMovement[2] = CurrentMovement[2] + Value[2][2]
+	for _, Table in next, KeyInputs do
+		if Table[1] then
+			local X, Z = MovementVector.X, MovementVector.Z
+			MovementVector = Vector3.new(X + Table[2], 0, Z + Table[3])
 		end
 	end
 
-	local Movement = Vector3.new(CurrentMovement[1], 0, CurrentMovement[2])
-	local Magnitude = Movement.Magnitude
-
-	if Magnitude > 1 then
-		CurrentMovement = {CurrentMovement[1] / 2, CurrentMovement[2] / 2}
-	end
-
-	FakeHumanoid.Jump = KeyInputs["Space"][3]
-
 	if Shiftlock then
-		FakeRoot.CFrame = ShiftlockCalc
+		local LookVector = Camera.CFrame.LookVector
+		FakeRoot.CFrame = CFrame.new(FakeRoot.Position) * CFrame.Angles(0, math.atan2(-LookVector.X, -LookVector.Z), 0)
 	end
-	
-	FakeHumanoid:Move(IsMovementKeyPressed and Movement or Vector3.zero, true)
+
+	FakeHumanoid:Move(MovementVector, true)
 end
  
 local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
-	ReadyToClaim = false
 	table.clear(HatsInUse)
+	SafeToLoad = false
 
-	PreviousCameraCFrame = Camera.CFrame
-	Camera.CameraSubject = FakeHumanoid
-	Camera:GetPropertyChangedSignal("CFrame"):Wait()
-	Camera.CFrame = PreviousCameraCFrame
 	SetCameraTarget()
-
 	Character = Player.Character
 	Humanoid = GetInstanceWithTime(Character, "Humanoid", nil, 3)
 	RootPart = GetInstanceWithTime(Character, "Part", "HumanoidRootPart", 3)
-	if not RootPart or not Humanoid then -- Script Cancelled, Lack of needed Instances.
-		CancelScript();
-		return
-	end
-
+	
 	if DisableCharacterScripts then
 		for _, v in next, Character:GetDescendants() do
-			if v:IsA("LocalScript") then
+			if BetterIsA(v, "LocalScript") then
 				v.Disabled = false
 			end
 		end	
 	end
 
 	if Flinging then
-		local TemporarySignal = nil
-		
-		TemporarySignal = RunService.PostSimulation:Connect(function()
-			if MouseDown then -- prob unoptimized but doesnt matter honestly its better to not get any error
-				local Target = Mouse.Target 
-				local Target_P = Target and Target.Parent and Target.Parent:IsDescendantOf(workspace) and Target.Parent
-				local Target_PP = Target_P and Target_P.Parent and Target_P.Parent:IsDescendantOf(workspace) and Target_P.Parent
-				local NewTarget = Target_P and Target_P:FindFirstChildOfClass("Humanoid") or Target_PP and Target_PP:FindFirstChildOfClass("Humanoid") or nil
+		local Children = Character:GetChildren()
 
-				if NewTarget then
-					local Part = GetFirstPart(NewTarget.Parent)
-
-					if Part then
-						RootPart.CFrame = CFrame.new(Part.Position + Part.AssemblyLinearVelocity * FlingPrediction)
-					else
-						RootPart.CFrame = CFrame.new(Mouse.Hit.Position)
-					end
-				else
-					RootPart.CFrame = CFrame.new(Mouse.Hit.Position)
+		local TemporaryNoclip = RunService.PostSimulation:Connect(function()
+			for _, v in next, Children do
+				if BetterIsA(v, "Part") then
+					v.CanCollide = false
+					v.CanTouch = false
+					v.CanQuery = false
 				end
-			else
-				TemporarySignal:Disconnect()
-				TemporarySignal = nil
 			end
-
-			RootPart.AssemblyLinearVelocity = Vector3.new(4096, 4096, 4096)
 		end)
 
-		repeat task.wait() until TemporarySignal == nil
+		local TemporarySignal = RunService.PostSimulation:Connect(function()
+			if not MouseDown then
+				return
+			end
+
+			local Target = Mouse.Target
+			local TargetParent = Target and Target.Parent
+			local TargetDescendant = TargetParent and TargetParent.Parent
+			local NewTarget = BetterFindFirstChildOfClass(TargetParent, "Humanoid") or BetterFindFirstChildOfClass(TargetDescendant, "Humanoid")
+
+			RootPart.AssemblyLinearVelocity = Vector3.new(4096, 4096, 4096)
+			local HitCalciulation = CFrame.new(Mouse.Hit.Position)
+				
+			if NewTarget then
+				local Part = GetFirstPart(NewTarget.Parent)
+
+				if Part then
+					RootPart.CFrame = CFrame.new(Part.Position + Part.AssemblyLinearVelocity * Player:GetNetworkPing())
+				else
+					RootPart.CFrame = HitCalciulation
+				end
+			else
+				RootPart.CFrame = HitCalciulation
+			end
+		end)
+
+		repeat task.wait() until not MouseDown
+
+		TemporaryNoclip:Disconnect()
+		TemporarySignal:Disconnect()
+		TemporaryNoclip = nil
+		TemporarySignal = nil
 	end
 
-	TeleportOffset = FakeRoot.CFrame * CFrame.new(math.random(-TeleportOffsetRadius, TeleportOffsetRadius), 0.25, math.random(-TeleportOffsetRadius, TeleportOffsetRadius))
-
+	TeleportOffset = FakeRoot.CFrame * GetRandomRadius()
 	while ArePlayersNearby() do
-		TeleportOffset = FakeRoot.CFrame * CFrame.new(math.random(-TeleportOffsetRadius, TeleportOffsetRadius), 0.25, math.random(-TeleportOffsetRadius, TeleportOffsetRadius))
+		TeleportOffset = FakeRoot.CFrame * GetRandomRadius()
 		task.wait()
 	end
 
@@ -728,20 +749,13 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 	RootPart.CFrame = TeleportOffset
 	task.wait(WaitTime)
 
-	Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-
-	for _, v in next, FakeRig:GetDescendants() do
-		if v:IsA("Accessory") then
-			v:Destroy()
-		end
-	end
-
-
 	SetUpHatConfig()
 	FakeRigChildren = FakeRig:GetChildren()
+	Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+
+	task.wait(RecoverTime)
 	
-	task.wait(WaitTime/2)
-	ReadyToClaim = true
+	SafeToLoad = true
 end
 
 local function OnChatted(Message)
@@ -760,24 +774,23 @@ local function UponParentChange()
 	end
 end
 
--- // RunTime: Connecting Events
+-- // Finalizing: Connecting Events
+
 SetCameraTarget()
 SetUpHatConfig()
 
-StarterGui:SetCore("ResetButtonCallback", RespawnEvent)
 Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-RBXSignals[#RBXSignals+1] = Player.CharacterAdded:Connect(OnCharacterAdded)
-RBXSignals[#RBXSignals+1] = RunService.PostSimulation:Connect(OnPostSimulation)
-RBXSignals[#RBXSignals+1] = RunService.PreAnimation:Connect(OnPreSimulation)
-RBXSignals[#RBXSignals+1] = Camera:GetPropertyChangedSignal("CameraSubject"):Connect(SetCameraTarget)
-RBXSignals[#RBXSignals+1] = FakeRig:GetPropertyChangedSignal("Parent"):Connect(UponParentChange)
-RBXSignals[#RBXSignals+1] = RespawnEvent.Event:Connect(CancelScript)
-RBXSignals[#RBXSignals+1] = Player.Chatted:Connect(OnChatted)
-RBXSignals[#RBXSignals+1] = UserInputService.InputBegan:Connect(function(Input, GameProcessed) OnInputChange(Input, not GameProcessed, true) end)
-RBXSignals[#RBXSignals+1] = UserInputService.InputEnded:Connect(function(Input, GameProcessed) OnInputChange(Input, not GameProcessed, false) end)
 
--- // End: Finalizing
+RBXSignals[2] = Player.CharacterAdded:Connect(OnCharacterAdded)
+RBXSignals[3] = RunService.PostSimulation:Connect(OnPostSimulation)
+RBXSignals[4] = RunService.PreAnimation:Connect(OnPreSimulation)
+RBXSignals[5] = Camera:GetPropertyChangedSignal("CameraSubject"):Connect(SetCameraTarget)
+RBXSignals[6] = FakeRig:GetPropertyChangedSignal("Parent"):Connect(UponParentChange)
+RBXSignals[7] = RespawnEvent.Event:Connect(CancelScript)
+RBXSignals[8] = Player.Chatted:Connect(OnChatted)
+RBXSignals[9] = UserInputService.InputBegan:Connect(function(Input, GameProcessed) OnInputChange(Input, not GameProcessed, true) end)
+RBXSignals[10] = UserInputService.InputEnded:Connect(function(Input, GameProcessed) OnInputChange(Input, not GameProcessed, false) end)
 
 task.wait(WaitTime)
 FakeRigChildren = FakeRig:GetChildren()
-ReadyToClaim = true
+SafeToLoad = true
