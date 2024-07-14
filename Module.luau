@@ -58,7 +58,7 @@ local function BetterIsA(Instance, ClassName) -- <Any> <String> : Instance
 	return nil
 end
 
-local function GetInstanceWithTime(Parent, Class, Name, Timeout)
+local function GetInstanceWithTime(Parent, Class, Name, Timeout)  -- <Any> <String> <String> <Number> : Instance
 	local CurTime = 0
 
 	while Timeout > CurTime do
@@ -118,7 +118,7 @@ local FakeHumanoid = Instance.new("Humanoid")
 local FakeRigChildren = {}
 local FakeRoot = nil
 
-local function CancelScript()
+local function CancelScript()  -- : nil
 	for i, v in next, RBXSignals do
 		v:Disconnect()
 	end
@@ -509,7 +509,7 @@ local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
 	if not IsPart1Existant or IsPart1Existant and IsPart1Existant.Name ~= "Head" then
 		if FakeAttachment then
 			FakeHandleWeld.C0 = FakeAttachment.CFrame
-			FakeHandleWeld.C1 = FakeRig:FindFirstChild(tostring(FakeAttachment), true).CFrame -- SHUT UP ROBLOX.
+			FakeHandleWeld.C1 = FakeRig:FindFirstChild(tostring(FakeAttachment), true).CFrame
 			FakeHandleWeld.Part1 = FakeRig:FindFirstChild(tostring(FakeAttachment), true).Parent
 		else
 			FakeHandleWeld.Part1 = Head
@@ -531,7 +531,7 @@ local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
 	return FakeAccessory
 end
 
-local function SetUpHatConfig()
+local function SetUpHatConfig() -- : nil
 	for _, Hat in next, FakeRig:GetDescendants() do
 		if BetterIsA(Hat, "Accessory") then
 			Hat:Destroy()
@@ -567,23 +567,20 @@ local function SetUpHatConfig()
 	end
 end
 
-local function ArePlayersNearby()
+local function ArePlayersNearby() -- : Boolean
 	local PartsOnTheWay = workspace:GetPartBoundsInRadius(TeleportOffset.Position, 15)
 
-	for _, v in next, PartsOnTheWay do
-		local Model = v.Parent
+	for _, Part in next, PartsOnTheWay do
+		local Model = Part.Parent
 
-		if BetterIsA(v, "Model") and Model.Name ~= Player.Name and Model.PrimaryPart ~= nil then
-			return true
-		end
+		return BetterIsA(Part, "Model") and Model.Name ~= Player.Name and Model.PrimaryPart
 	end
-
-	return false
 end
 
-local function GetRandomRadius()
+local function GetRandomRadius() -- : CFrame
 	return CFrame.new(math.random(-TeleportOffsetRadius, TeleportOffsetRadius), 0.5, math.random(-TeleportOffsetRadius, TeleportOffsetRadius))
 end
+
 -- // RunTime: Event functions
 
 local function SetCameraTarget() -- Function | SIGNAL: Camera:GetPropertySignalChanged("CameraSubject")
@@ -689,9 +686,9 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 	RootPart = GetInstanceWithTime(Character, "Part", "HumanoidRootPart", 3)
 	
 	if DisableCharacterScripts then
-		for _, v in next, Character:GetDescendants() do
-			if BetterIsA(v, "LocalScript") then
-				v.Disabled = false
+		for _, Instance in next, Character:GetDescendants() do
+			if BetterIsA(Instance, "LocalScript") then
+				Instance.Disabled = true
 			end
 		end	
 	end
@@ -700,19 +697,17 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 		local Children = Character:GetChildren()
 
 		local TemporaryNoclip = RunService.PostSimulation:Connect(function()
-			for _, v in next, Children do
-				if BetterIsA(v, "Part") then
-					v.CanCollide = false
-					v.CanTouch = false
-					v.CanQuery = false
+			for _, Part in next, Children do
+				if BetterIsA(Part, "Part") then
+					Part.CanCollide = false
+					Part.CanTouch = false
+					Part.CanQuery = false
 				end
 			end
 		end)
 
 		local TemporarySignal = RunService.PostSimulation:Connect(function()
-			if not MouseDown then
-				return
-			end
+			if not MouseDown then return end
 
 			local Target = Mouse.Target
 			local TargetParent = Target and Target.Parent
@@ -763,7 +758,7 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 	SafeToLoad = true
 end
 
-local function OnChatted(Message)
+local function OnChatted(Message) -- SIGNAL: Player.Chatted
 	if AnimationHandlingFunction then
 		AnimationHandlingFunction(Message)
 	end
@@ -773,7 +768,7 @@ local function OnChatted(Message)
 	end
 end
 
-local function UponParentChange()
+local function UponParentChange() -- SIGNAL: FakeRig:GetPropertyChangedSignal("Parent")
 	if not FakeRig:IsDescendantOf(workspace) then
 		CancelScript()
 	end
@@ -788,7 +783,7 @@ Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
 
 RBXSignals[2] = Player.CharacterAdded:Connect(OnCharacterAdded)
 RBXSignals[3] = RunService.PostSimulation:Connect(OnPostSimulation)
-RBXSignals[4] = RunService.PreAnimation:Connect(OnPreSimulation)
+RBXSignals[4] = RunService.PreAnimation:Connect(OnPreSimulation) 
 RBXSignals[5] = Camera:GetPropertyChangedSignal("CameraSubject"):Connect(SetCameraTarget)
 RBXSignals[6] = FakeRig:GetPropertyChangedSignal("Parent"):Connect(UponParentChange)
 RBXSignals[7] = RespawnEvent.Event:Connect(CancelScript)
@@ -797,5 +792,6 @@ RBXSignals[9] = UserInputService.InputBegan:Connect(function(Input, GameProcesse
 RBXSignals[10] = UserInputService.InputEnded:Connect(function(Input, GameProcessed) OnInputChange(Input, not GameProcessed, false) end)
 
 task.wait(WaitTime)
+
 FakeRigChildren = FakeRig:GetChildren()
 SafeToLoad = true
