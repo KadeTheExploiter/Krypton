@@ -1,4 +1,5 @@
 -- // Defining Variables: Settings
+
 local Configuration = Configuration or {}
 local ReturnOnDeath = Configuration.ReturnOnDeath or false
 local Flinging = Configuration.Flinging or true
@@ -72,12 +73,17 @@ local function GetInstanceWithTime(Parent, Class, Name, Timeout)
 end
 
 local Workspace = workspace
+local Terrain = Workspace:FindFirstChildOfClass("Terrain")
 local Players = BetterFindFirstChildOfClass(game, "Players")
 local RunService = BetterFindFirstChildOfClass(game, "RunService")
 local UserInputService = BetterFindFirstChildOfClass(game, "UserInputService")
 local StarterGui = BetterFindFirstChildOfClass(game, "StarterGui")
 local Camera = Workspace.CurrentCamera
 local PreviousCameraCFrame = Camera.CFrame
+
+if Terrain:FindFirstChild(RigName) then
+	return
+end
 
 local TeleportOffset = CFrame.identity
 
@@ -169,8 +175,8 @@ do -- [[ Scoped Rig Creating. ]]
 	RightArm.Size = Vector3.new(1,2,1)
 
 	Head.Transparency = 1
-	Torso.Transparency = 1
-	RightArm.Transparency = 1
+	Torso.Transparency = 0.5
+	RightArm.Transparency = 0.5
 
 	FakeRoot = Torso:Clone()
 	FakeRoot.CanCollide = false
@@ -214,7 +220,7 @@ do -- [[ Scoped Rig Creating. ]]
 	FakeRoot.CFrame = RootPart.CFrame * CFrame.new(0, 0.1, 0)
 	FakeRig.Name = RigName
 	FakeRig.PrimaryPart = Head
-	FakeRig.Parent = workspace
+	FakeRig.Parent = Terrain
 
 	FakeHumanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
 	FakeHumanoid:ChangeState(Enum.HumanoidStateType.Landed)
@@ -681,7 +687,7 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 	Character = Player.Character
 	Humanoid = GetInstanceWithTime(Character, "Humanoid", nil, 3)
 	RootPart = GetInstanceWithTime(Character, "Part", "HumanoidRootPart", 3)
-
+	
 	if DisableCharacterScripts then
 		for _, v in next, Character:GetDescendants() do
 			if BetterIsA(v, "LocalScript") then
