@@ -169,8 +169,8 @@ do -- [[ Scoped Rig Creating. ]]
 	RightArm.Size = Vector3.new(1,2,1)
 
 	Head.Transparency = 1
-	Torso.Transparency = 0.5
-	RightArm.Transparency = 0.5
+	Torso.Transparency = 1
+	RightArm.Transparency = 1
 
 	FakeRoot = Torso:Clone()
 	FakeRoot.CanCollide = false
