@@ -76,7 +76,7 @@ local StarterGui = game:GetService("StarterGui")
 local Camera = Workspace.CurrentCamera
 local PreviousCameraCFrame = Camera.CFrame
 
-local Terrain = BetterFindFirstChildOfClass(workspace, "Terrain")
+local Terrain = BetterFindFirstChildOfClass(Workspace, "Terrain")
 
 if Terrain:FindFirstChild(RigName) then
 	return
@@ -125,7 +125,7 @@ local function CancelScript()  -- : nil
 		local Offset = FakeRoot.CFrame
 		
 		Player.CharacterAdded:Wait()
-		workspace.CurrentCamera.CFrame = CamCFrame
+		Workspace.CurrentCamera.CFrame = CamCFrame
 		RootPart = GetInstanceWithTime(Player.Character, "Part", "HumanoidRootPart", 3)
 
 		if RootPart then
@@ -569,7 +569,7 @@ local function SetUpHatConfig() -- : nil
 end
 
 local function ArePlayersNearby() -- : Boolean
-	local PartsOnTheWay = workspace:GetPartBoundsInRadius(TeleportOffset.Position, 15)
+	local PartsOnTheWay = Workspace:GetPartBoundsInRadius(TeleportOffset.Position, 15)
 
 	for _, Part in next, PartsOnTheWay do
 		local Model = Part.Parent
@@ -772,7 +772,7 @@ local function OnChatted(Message) -- SIGNAL: Player.Chatted
 end
 
 local function UponParentChange() -- SIGNAL: FakeRig:GetPropertyChangedSignal("Parent")
-	if not FakeRig:IsDescendantOf(workspace) then
+	if not FakeRig:IsDescendantOf(Workspace) then
 		CancelScript()
 	end
 end
