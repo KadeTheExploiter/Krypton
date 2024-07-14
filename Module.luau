@@ -13,23 +13,23 @@ local DisableCharacterScripts = Configuration.DisableCharacterScripts or false
 local TeleportOffsetRadius = Configuration.TeleportOffsetRadius or 22
 local Hats = Configuration.Hats or {
 	["Right Arm"] = {
-		{Texture = "rbxassetid://14255544465", Mesh = "rbxassetid://14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))}
+		{Texture = "14255544465", Mesh = "14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))}
 	},
 
 	["Left Arm"] = {
-		{Texture = "rbxassetid://14255544465", Mesh = "rbxassetid://14255522247", Name = "LARM", Offset = CFrame.Angles(0, 0, math.rad(90))}
+		{Texture = "14255544465", Mesh = "14255522247", Name = "LARM", Offset = CFrame.Angles(0, 0, math.rad(90))}
 	},
 
 	["Right Leg"] = {
-		{Texture = "rbxassetid://17374768001", Mesh = "rbxassetid://17374767929", Name = "Accessory (RARM)", Offset = CFrame.Angles(0, 0, math.rad(90))}
+		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (RARM)", Offset = CFrame.Angles(0, 0, math.rad(90))}
 	},
 
 	["Left Leg"] = {
-		{Texture = "rbxassetid://17374768001", Mesh = "rbxassetid://17374767929", Name = "Accessory (LARM)", Offset = CFrame.Angles(0, 0, math.rad(90))}
+		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (LARM)", Offset = CFrame.Angles(0, 0, math.rad(90))}
 	},
 
 	["Torso"] = {
-		{Texture = "rbxassetid://13415110780", Mesh = "rbxassetid://13421774668", Name = "MeshPartAccessory", Offset = CFrame.identity}
+		{Texture = "13415110780", Mesh = "13421774668", Name = "MeshPartAccessory", Offset = CFrame.identity}
 	},
 }
 
@@ -42,8 +42,6 @@ local function BetterFindFirstChildOfClass(Parent, ClassName) -- <Any> <String> 
 			return Value
 		end
 	end
-
-	return nil
 end
 
 local function BetterIsA(Instance, ClassName) -- <Any> <String> : Instance
@@ -54,8 +52,6 @@ local function BetterIsA(Instance, ClassName) -- <Any> <String> : Instance
 			return Instance:IsA(ClassName)
 		end
 	end
-
-	return nil
 end
 
 local function GetInstanceWithTime(Parent, Class, Name, Timeout)  -- <Any> <String> <String> <Number> : Instance
@@ -72,14 +68,15 @@ local function GetInstanceWithTime(Parent, Class, Name, Timeout)  -- <Any> <Stri
 	end
 end
 
-local Workspace = workspace
-local Terrain = Workspace:FindFirstChildOfClass("Terrain")
-local Players = BetterFindFirstChildOfClass(game, "Players")
-local RunService = BetterFindFirstChildOfClass(game, "RunService")
-local UserInputService = BetterFindFirstChildOfClass(game, "UserInputService")
-local StarterGui = BetterFindFirstChildOfClass(game, "StarterGui")
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
 local Camera = Workspace.CurrentCamera
 local PreviousCameraCFrame = Camera.CFrame
+
+local Terrain = BetterFindFirstChildOfClass(workspace, "Terrain")
 
 if Terrain:FindFirstChild(RigName) then
 	return
@@ -88,7 +85,7 @@ end
 local TeleportOffset = CFrame.identity
 
 local MouseDown = nil
-local SpacePressed = nil
+local SpaceDown = nil
 local SafeToLoad = nil
 local AnimationHandlingFunction = nil
 
@@ -98,7 +95,6 @@ local RespawnEvent = Instance.new("BindableEvent")
 
 local RBXSignals = {}
 local HatsInUse = {}
-
 local KeyInputs = {[Enum.KeyCode.W] = {false, 0, -1}, [Enum.KeyCode.A] = {false, -1, 0}, [Enum.KeyCode.S] = {false, 0, 1}, [Enum.KeyCode.D] = {false, 1, 0}}
 
 local Player = Players.LocalPlayer
@@ -119,7 +115,7 @@ local FakeRigChildren = {}
 local FakeRoot = nil
 
 local function CancelScript()  -- : nil
-	for i, v in next, RBXSignals do
+	for _, v in next, RBXSignals do
 		v:Disconnect()
 	end
 
@@ -137,6 +133,14 @@ local function CancelScript()  -- : nil
 	end
 
 	FakeRig:Destroy()
+
+	-- Free the memory after use.
+
+	table.clear(Hats)
+	table.clear(HatsInUse)
+	table.clear(RBXSignals)
+	table.clear(FakeRigChildren)
+	table.clear(KeyInputs)
 end
 
 do -- [[ Scoped Rig Creating. ]]
@@ -175,8 +179,8 @@ do -- [[ Scoped Rig Creating. ]]
 	RightArm.Size = Vector3.new(1,2,1)
 
 	Head.Transparency = 1
-	Torso.Transparency = 0.5
-	RightArm.Transparency = 0.5
+	Torso.Transparency = 1
+	RightArm.Transparency = 1
 
 	FakeRoot = Torso:Clone()
 	FakeRoot.CanCollide = false
@@ -254,7 +258,7 @@ do -- [[ Scoped Rig Creating. ]]
 
 	if Animations then
 		task.delay(1, function()
-			local AnimationsToggled = (Animate and Animate.Parent) and Animate.Enabled or false
+			local AnimationsToggled = true
 			local Pose = "Standing"
 			local CurrentAnim = ""
 			local CurrentAnimInstance = nil
@@ -288,7 +292,7 @@ do -- [[ Scoped Rig Creating. ]]
 				end
 			end
 		
-			local function PlayAnimation(AnimName, TransitionTime, humanoid)
+			local function PlayAnimation(AnimName, TransitionTime)
 				local Anim = AnimationTable[AnimName].Anim
 
 				if Anim ~= CurrentAnimInstance then
@@ -298,26 +302,26 @@ do -- [[ Scoped Rig Creating. ]]
 					end
 
 					CurrentAnimSpeed = 1.0
-					CurrentAnimTrack = humanoid:LoadAnimation(Anim)
+					CurrentAnimTrack = FakeHumanoid:LoadAnimation(Anim)
 					CurrentAnimTrack.Priority = Enum.AnimationPriority.Core
 		
 					CurrentAnimTrack:Play(TransitionTime)
 					CurrentAnim = AnimName
 					CurrentAnimInstance = Anim
 		
-					if (CurrentAnimKeyframeHandler ~= nil) then
+					if CurrentAnimKeyframeHandler then
 						CurrentAnimKeyframeHandler:disconnect()
 					end
 
 					CurrentAnimKeyframeHandler = CurrentAnimTrack.KeyframeReached:Connect(function(FrameName)
 						if FrameName == "End" then
 							local RepeatAnim = CurrentAnim
-							if EmoteNames[RepeatAnim] ~= nil and EmoteNames[RepeatAnim] == false then
+							if EmoteNames[RepeatAnim] and EmoteNames[RepeatAnim] == false then
 								RepeatAnim = "Idle"
 							end
 					
 							local AnimSpeed = CurrentAnimSpeed
-							PlayAnimation(RepeatAnim, 0.0, FakeHumanoid)
+							PlayAnimation(RepeatAnim, 0.0)
 							SetAnimationSpeed(AnimSpeed)
 						end
 					end)
@@ -332,19 +336,19 @@ do -- [[ Scoped Rig Creating. ]]
 			local function OnRunning(Speed)
 				if AnimationsToggled then
 					if Speed > 0.01 then
-						PlayAnimation("Walk", 0.1, FakeHumanoid) Pose = "Running"
+						PlayAnimation("Walk", 0.1) Pose = "Running"
 						if CurrentAnimInstance and CurrentAnimInstance.AnimationId == "http://www.roblox.com/asset/?id=180426354" then
 							SetAnimationSpeed(Speed / 14.5)
 						end
-					elseif EmoteNames[CurrentAnim] == nil then 
-						PlayAnimation("Idle", 0.1, FakeHumanoid) Pose = "Standing"
+					elseif not EmoteNames[CurrentAnim] then 
+						PlayAnimation("Idle", 0.1) Pose = "Standing"
 					end
 				end
 			end
 		
 			local function OnJumping()
 				if AnimationsToggled then 
-					PlayAnimation("Jump", 0.1, FakeHumanoid)
+					PlayAnimation("Jump", 0.1)
 					JumpAnimTime = 0.3
 					Pose = "Jumping"
 				end
@@ -352,13 +356,13 @@ do -- [[ Scoped Rig Creating. ]]
 		
 			local function OnClimbing(Speed)
 				if AnimationsToggled then
-					PlayAnimation("Climb", 0.1, FakeHumanoid) SetAnimationSpeed(Speed / 12.0) Pose = "Climbing"
+					PlayAnimation("Climb", 0.1) SetAnimationSpeed(Speed / 12.0) Pose = "Climbing"
 				end
 			end
 		
 			local function OnFreeFall()
 				if AnimationsToggled then
-					if JumpAnimTime <= 0 then PlayAnimation("Fall", 0.3, FakeHumanoid) end
+					if JumpAnimTime <= 0 then PlayAnimation("Fall", 0.3) end
 					Pose = "FreeFall"
 				end
 			end
@@ -390,12 +394,12 @@ do -- [[ Scoped Rig Creating. ]]
 				end
 
 				if Pose == "Standing" and EmoteNames[Emote] ~= nil then
-					PlayAnimation(Emote, 0.1, FakeHumanoid)
+					PlayAnimation(Emote, 0.1)
 				end
 			end
 		
 			RBXSignals[1] = RunService.PostSimulation:Connect(function(DeltaTime)
-				AnimationsToggled = (Animate and Animate.Parent) and Animate.Enabled or false
+				AnimationsToggled = Animate and Animate.Parent and Animate.Enabled or false
 				local Amplitude = 1
 				local SetAngles = false
 		
@@ -404,25 +408,25 @@ do -- [[ Scoped Rig Creating. ]]
 				end
 		
 				if Pose == "FreeFall" and JumpAnimTime <= 0 then
-					PlayAnimation("Fall", 0.3, FakeHumanoid)
+					PlayAnimation("Fall", 0.3)
 				elseif Pose == "Seated" then
-					PlayAnimation("Sit", 0.5, FakeHumanoid)
+					PlayAnimation("Sit", 0.5)
 				elseif Pose == "Running" then
-					PlayAnimation("Walk", 0.1, FakeHumanoid)
+					PlayAnimation("Walk", 0.1)
 				elseif Pose == "Dead" or Pose == "GettingUp" or Pose == "FallingDown" or Pose == "Seated" or Pose == "PlatformStanding" then
 					local OldAnim = CurrentAnim
 
-					if EmoteNames[OldAnim] == false then
+					if not EmoteNames[OldAnim] then
 						OldAnim = "Idle"
 					end
 	
 					CurrentAnim, CurrentAnimInstance = "", nil
 	
-					if CurrentAnimKeyframeHandler ~= nil then
+					if CurrentAnimKeyframeHandler  then
 						CurrentAnimKeyframeHandler:Disconnect()
 					end
 			
-					if CurrentAnimTrack ~= nil then
+					if CurrentAnimTrack then
 						CurrentAnimTrack:Stop()
 						CurrentAnimTrack:Destroy()
 					end
@@ -473,8 +477,6 @@ local function ObtainMeshAndTextureOfAccessory(Accessory) -- <Accessory> : {Mesh
 	elseif IfMesh then
 		return {MeshId = IfMesh.MeshId, TextureId = IfMesh.TextureId}
 	end
-
-	return {MeshId = "" ,TextureId = ""}
 end
 
 local function FindAccessory(FromWhere, Texture, Mesh, Name) -- <Instance> <string> <string> <string> : Accessory
@@ -482,13 +484,11 @@ local function FindAccessory(FromWhere, Texture, Mesh, Name) -- <Instance> <stri
 		if BetterIsA(x, "Accessory") and x.Name == Name then
 			local HatData = ObtainMeshAndTextureOfAccessory(x)
 
-			if string.match(HatData.MeshId, Mesh) and string.match(HatData.TextureId, Texture) then
+			if string.find(HatData.MeshId, Mesh) and string.find(HatData.TextureId, Texture) then
 				return x
 			end
 		end
 	end
-
-	return
 end
 
 local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
@@ -521,8 +521,8 @@ local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
 		FakeHandleWeld.Part1 = Head
 	end
 
-	FakeHandleWeld.Part0 = FakeHandle
 	FakeHandle.Transparency = 1
+	FakeHandleWeld.Part0 = FakeHandle
 	FakeHandleWeld.Name = "AccessoryWeld"
 
 	FakeHandleWeld.Parent = FakeHandle
@@ -594,8 +594,10 @@ local function OnInputChange(Input, GameProcessed, Bool) -- SIGNAL: UIS.InputBeg
 	if GameProcessed then
 		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
 			MouseDown = Bool
-		elseif Input.KeyCode == Enum.KeyCode.Space then
-			SpacePressed = Bool
+		end
+
+		if Input.KeyCode == Enum.KeyCode.Space then
+			SpaceDown = Bool
 		end
 
 		for MyInput, Table in next, KeyInputs do
@@ -609,7 +611,7 @@ end
 local function OnPostSimulation() -- SIGNAL: RunService.PostSimulation
 	StarterGui:SetCore("ResetButtonCallback", RespawnEvent)
 	local Multiply = SafeToLoad and 4 or 1
-	local ReverseSleep = Vector3.new(0.0075 * math.sin(os.clock() * 7), 0, 0.0075 * math.cos(os.clock() * 16))
+	local ReverseSleep = Vector3.new(0.0075 * math.sin(os.clock() * 7), 0, 0.0085 * math.cos(os.clock() * 16))
 	local SafeYAxis = 35 - 3 * math.sin(os.clock() * 10)
 		
 	if CanCallSimRadius then
@@ -626,7 +628,7 @@ local function OnPostSimulation() -- SIGNAL: RunService.PostSimulation
 			local Part1Velocity = OtherLimb.AssemblyLinearVelocity * Part1Magnitude
 			local CalculatedVel = Part1Velocity * Multiply
 
-			local ClampedAxisY = math.clamp(Part1Velocity.Y, SafeYAxis, 1200)
+			local ClampedAxisY = math.clamp(Part1Velocity.Y, SafeYAxis, 1024)
 			local Velocity = Vector3.new(CalculatedVel.X, ClampedAxisY, CalculatedVel.Z)
 
 			local CFrameOffset = OtherLimb.CFrame * Part1Offset
@@ -659,7 +661,7 @@ local function OnPreSimulation() -- SIGNAL: RunService.PreSimulation
 	end
 
 	FakeHumanoid.AutoRotate = not Shiftlock
-	FakeHumanoid.Jump = SpacePressed
+	FakeHumanoid.Jump = SpaceDown
 
 	for _, Table in next, KeyInputs do
 		if Table[1] then
