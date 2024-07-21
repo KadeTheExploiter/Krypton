@@ -73,8 +73,6 @@ local function GetInstanceWithTime(Parent, Class, Name, Timeout)  -- <Any> <Stri
 	end
 end
 
-repeat task.wait(0.5) until game:IsLoaded()
-
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
