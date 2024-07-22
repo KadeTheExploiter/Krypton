@@ -10,12 +10,11 @@ local WaitTime = Configuration.WaitTime or 0.178
 local RigName = Configuration.RigName or "Evolution, it must've passed you by."
 local NoCollisions = Configuration.NoCollisions or Flinging or false
 local AntiVoiding = Configuration.AntiVoiding or false
-local SetSimulationRadius = Configuration.SetSimulationRadius or true
+local SetSimulationRadius = Configuration.SetSimulationRadius or true	
 local DisableCharacterScripts = Configuration.DisableCharacterScripts or true
 local TeleportOffsetRadius = Configuration.TeleportOffsetRadius or 22
 local ForceMobileMode = Configuration.ForceMobileMode or false
 local ForceDesktopMode = Configuration.ForceDesktopMode or false
-
 local Hats = Configuration.Hats or {
 	["Right Arm"] = {
 		{Texture = "14255544465", Mesh = "14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))}
@@ -31,7 +30,7 @@ local Hats = Configuration.Hats or {
 
 	["Left Leg"] = {
 		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (LARM)", Offset = CFrame.Angles(0, 0, math.rad(90))}
-	},
+	},	
 
 	["Torso"] = {
 		{Texture = "13415110780", Mesh = "13421774668", Name = "MeshPartAccessory", Offset = CFrame.identity}
@@ -63,7 +62,7 @@ local function GetInstanceWithTime(Parent, Class, Name, Timeout)  -- <Any> <Stri
 	local CurTime = 0
 
 	while Timeout > CurTime do
-		for _, v in next, Parent:GetChildren() do
+		for _, v in Parent:GetChildren() do
 			if BetterIsA(v, Class) and v.Name == (Name or v.Name) then
 				return v
 			end
@@ -97,7 +96,7 @@ local SpaceDown = nil
 local SafeToLoad = nil
 local AnimationHandlingFunction = nil
 
-local RecoverTime = WaitTime/1.75
+local RecoverTime = WaitTime / 1.75
 
 local RespawnEvent = Instance.new("BindableEvent")
 
@@ -126,7 +125,7 @@ local FakeRigChildren = {}
 local FakeRoot = nil
 
 local function CancelScript()  -- : nil
-	for _, Signal in next, RBXSignals do
+	for _, Signal in RBXSignals do
 		Signal:Disconnect()
 		Signal = nil
 	end
@@ -264,7 +263,7 @@ do -- [[ Scoped Rig Creating. ]]
 		["WaistBackAttachment"] = { CFrame.new(0, -1, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso }
 	}
 
-	for Name, Table in next, Attachments do
+	for Name, Table in Attachments do
 		MakeAttachment(Name, Table[1], Table[2])
 	end
 
@@ -292,11 +291,10 @@ do -- [[ Scoped Rig Creating. ]]
 				dance1 = "http://www.roblox.com/asset/?id=182435998", dance2 = "http://www.roblox.com/asset/?id=182436842", dance3 = "http://www.roblox.com/asset/?id=182436935", wave = "http://www.roblox.com/asset/?id=128777973", point = "http://www.roblox.com/asset/?dan=128853357", laugh = "http://www.roblox.com/asset/?id=129423131", cheer = "http://www.roblox.com/asset/?id=129423030"
 			}
 
-
-			for name, v in next, AnimLinks do
-				AnimationTable[name] = {}
-				AnimationTable[name].Anim = Instance.new("Animation")
-				AnimationTable[name].Anim.AnimationId = v
+			for Name, ID in AnimLinks do
+				AnimationTable[Name] = {}
+				AnimationTable[Name].Anim = Instance.new("Animation")
+				AnimationTable[Name].Anim.AnimationId = ID
 			end	
 
 			local function SetAnimationSpeed(Speed)
@@ -494,7 +492,7 @@ local function ObtainMeshAndTextureOfAccessory(Accessory) -- <Accessory> : {Mesh
 end
 
 local function FindAccessory(FromWhere, Texture, Mesh, Name) -- <Instance> <string> <string> <string> : Accessory
-	for _, x in next, FromWhere:GetChildren() do
+	for _, x in FromWhere:GetChildren() do
 		if BetterIsA(x, "Accessory") and x.Name == Name then
 			local HatData = ObtainMeshAndTextureOfAccessory(x)
 
@@ -549,14 +547,14 @@ local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
 end
 
 local function SetUpHatConfig() -- : nil
-	for _, Hat in next, FakeRig:GetDescendants() do
+	for _, Hat in FakeRig:GetDescendants() do
 		if BetterIsA(Hat, "Accessory") then
 			Hat:Destroy()
 		end
 	end
 
-	for Index, x in next, Hats do
-		for _, Info in next, x do
+	for Index, x in Hats do
+		for _, Info in x do
 			local Accessory = FindAccessory(Character, Info.Texture, Info.Mesh, Info.Name)
 
 			if Accessory then
@@ -569,7 +567,7 @@ local function SetUpHatConfig() -- : nil
 		end
 	end
 
-	for _, v in next, Character:GetChildren() do
+	for _, v in Character:GetChildren() do
 		if BetterIsA(v, "Accessory") then
 			local Handle = GetFirstPart(v)
 
@@ -591,7 +589,7 @@ end
 local function ArePlayersNearby() -- : Boolean
 	local PartsOnTheWay = Workspace:GetPartBoundsInRadius(TeleportOffset, 17.5)
 
-	for _, Part in next, PartsOnTheWay do
+	for _, Part in PartsOnTheWay do
 		local Model = Part.Parent
 
 		if BetterIsA(Model, "Model") then
@@ -623,7 +621,7 @@ local function OnInputChange(Input, GameProcessed, Bool) -- SIGNAL: UIS.InputBeg
 			SpaceDown = Bool
 		end
 
-		for MyInput, Table in next, KeyInputs do
+		for MyInput, Table in KeyInputs do
 			if Input.KeyCode == MyInput then
 				Table[1] = Bool
 			end
@@ -668,7 +666,7 @@ local function OnPostSimulation() -- SIGNAL: RunService.PostSimulation
 		Player.SimulationRadius = 16384
 	end
 
-	for Handle, Data in next, HatsInUse do
+	for Handle, Data in HatsInUse do
 		local OtherLimb = Data[1]
 
 		if OtherLimb and IsNetworkOwner(Handle) then
@@ -691,7 +689,7 @@ end
 
 local function OnPreSimulation() -- SIGNAL: RunService.PreSimulation
 	if NoCollisions then
-		for _, Part in next, FakeRigChildren do
+		for _, Part in FakeRigChildren do
 			if BetterIsA(Part, "Part") then
 				Part.CanCollide = false
 				Part.CanTouch = false
@@ -715,7 +713,7 @@ local function OnPreSimulation() -- SIGNAL: RunService.PreSimulation
 		FakeHumanoid.AutoRotate = not Shiftlock
 		FakeHumanoid.Jump = SpaceDown
 
-		for _, Table in next, KeyInputs do
+		for _, Table in KeyInputs do
 			if Table[1] then
 				local X, Z = MovementVector.X, MovementVector.Z
 				MovementVector = Vector3.new(X + Table[2], 0, Z + Table[3])
@@ -749,7 +747,7 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 			Humanoid:ChangeState(7)
 
 			if DisableCharacterScripts then
-				for _, Instance in next, Character:GetDescendants() do
+				for _, Instance in Character:GetDescendants() do
 					if BetterIsA(Instance, "LocalScript") then
 						Instance.Disabled = true
 					end
