@@ -511,6 +511,7 @@ local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
 	local FakeAttachment = BetterFindFirstChildOfClass(FakeHandle, "Attachment")
 	local RigAttachment = FakeRig:FindFirstChild(FakeAttachment.Name, true)
 	local FakeHandleWeld = Instance.new("Weld")
+
 	FakeHandleWeld.Name = "AccessoryWeld"
 	FakeHandleWeld.Part0 = FakeHandle
 	FakeHandleWeld.C0 = FakeAttachment.CFrame
@@ -521,7 +522,6 @@ local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
 		FakeHandleWeld.C1 = RigAttachment.CFrame
 		FakeHandleWeld.Part1 = RigAttachment.Parent
 	else
-		FakeHandleWeld.C1 = CFrame.new(0,0.5,0) * FakeAccessory.AttachmentPoint:Inverse()
 		FakeHandleWeld.Part1 = FakeRig:FindFirstChild("Head")
 	end
 
