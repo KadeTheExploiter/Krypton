@@ -183,9 +183,9 @@ do -- [[ Scoped Rig Creating. ]]
 		Attachment.Parent = Parent
 	end
 
-	local Head = Instance.new("Part")
 	local Torso = Instance.new("Part")
 	local RightArm = Instance.new("Part")
+	local Head = Instance.new("Part")
 
 	Head.Size = Vector3.new(2,1,1)
 	Torso.Size = Vector3.new(2,2,1)
@@ -504,41 +504,26 @@ local function FindAccessory(FromWhere, Texture, Mesh, Name) -- <Instance> <stri
 end
 
 local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
-	local Head = FakeRig:FindFirstChild("Head")
-
-	local Handle = GetFirstPart(Accessory)
-	local Weld = GetFirstWeld(Handle)
-
-	local IsPart1Existant = Weld.Part1 or nil
-
 	local FakeAccessory = Accessory:Clone()
 	local FakeHandle = GetFirstPart(FakeAccessory)
+	FakeHandle.Transparency = 1
 
 	local FakeAttachment = BetterFindFirstChildOfClass(FakeHandle, "Attachment")
+	local RigAttachment = FakeRig:FindFirstChild(FakeAttachment.Name, true)
 	local FakeHandleWeld = Instance.new("Weld")
+	FakeHandleWeld.Name = "AccessoryWeld"
+	FakeHandleWeld.Part0 = FakeHandle
+	FakeHandleWeld.C0 = FakeAttachment.CFrame
 
 	DestroyWeld(FakeHandle)
 
-	if IsPart1Existant and IsPart1Existant.Name == "Head" then
-		FakeHandleWeld.C0 = Weld.C0 or CFrame.identity
-		FakeHandleWeld.C1 = Weld.C1 or CFrame.identity
-		FakeHandleWeld.Part1 = Head
+	if RigAttachment then
+		FakeHandleWeld.C1 = RigAttachment.CFrame
+		FakeHandleWeld.Part1 = RigAttachment.Parent
 	else
-		if FakeAttachment then
-			local RigAttachment = FakeRig:FindFirstChild(FakeAttachment.Name, true)
-			FakeHandleWeld.C0 = FakeAttachment.CFrame
-
-			FakeHandleWeld.C1 = RigAttachment and RigAttachment.CFrame or CFrame.identity
-			FakeHandleWeld.Part1 = RigAttachment and RigAttachment.Parent or Head
-		else
-			FakeHandleWeld.C1 = CFrame.new(0, Head.Size.Y / 2, 0) * FakeAccessory.AttachmentPoint:Inverse()
-			FakeHandleWeld.Part1 = Head
-		end
+		FakeHandleWeld.C1 = CFrame.new(0,0.5,0) * FakeAccessory.AttachmentPoint:Inverse()
+		FakeHandleWeld.Part1 = FakeRig:FindFirstChild("Head")
 	end
-
-	FakeHandle.Transparency = 1
-	FakeHandleWeld.Part0 = FakeHandle
-	FakeHandleWeld.Name = "AccessoryWeld"
 
 	FakeHandleWeld.Parent = FakeHandle
 	FakeAccessory.Parent = FakeRig
