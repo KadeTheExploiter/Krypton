@@ -647,8 +647,7 @@ local function OnPostSimulation() -- SIGNAL: RunService.PostSimulation
 	local SafeYAxis = 35 - 3 * math.sin(os.clock() * 10)
 
 	if CanCallSimRadius then
-		Player.MaximumSimulationRadius = 16384
-		Player.SimulationRadius = 16384
+		Player.SimulationRadius = 1000
 	end
 
 	for Handle, Data in HatsInUse do
