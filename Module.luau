@@ -103,7 +103,7 @@ local RespawnEvent = Instance.new("BindableEvent")
 
 local RBXSignals = table.create(15, nil)
 local HatsInUse = table.create(15, nil)
-local KeyInputs = table.create(4, nil) -- optimized
+local KeyInputs = table.create(4, nil)
 
 KeyInputs[Enum.KeyCode.W] = {false, 0, -1}
 KeyInputs[Enum.KeyCode.A] = {false, -1, 0}
@@ -248,26 +248,25 @@ do -- [[ Scoped Rig Creating. ]]
 	FakeHumanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
 	FakeHumanoid:ChangeState(Enum.HumanoidStateType.Landed)
 
-	local Attachments = {
-		["HairAttachment"] = { CFrame.new(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head },
-		["HatAttachment"] = { CFrame.new(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head },
-		["FaceFrontAttachment"] = { CFrame.new(0, 0, -0.6, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head },
-		["RootAttachment"] = { CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FakeRoot },
-		["LeftShoulderAttachment"] = { CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftArm },
-		["LeftGripAttachment"] = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftArm },
-		["RightShoulderAttachment"] = { CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightArm },
-		["RightGripAttachment"] = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightArm },
-		["LeftFootAttachment"] = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftLeg },
-		["RightFootAttachment"] = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightLeg },
-		["NeckAttachment"] = { CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
-		["BodyFrontAttachment"] = { CFrame.new(0, 0, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
-		["BodyBackAttachment"] = { CFrame.new(0, 0, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
-		["LeftCollarAttachment"] = { CFrame.new(-1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
-		["RightCollarAttachment"] = { CFrame.new(1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
-		["WaistFrontAttachment"] = { CFrame.new(0, -1, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
-		["WaistCenterAttachment"] = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso },
-		["WaistBackAttachment"] = { CFrame.new(0, -1, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso }
-	}
+	local Attachments = table.create(18, nil)
+	Attachments.HairAttachment = { CFrame.new(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head }
+	Attachments.HatAttachment = { CFrame.new(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head }
+	Attachments.FaceFrontAttachment = { CFrame.new(0, 0, -0.6, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head }
+	Attachments.RootAttachment = { CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), FakeRoot }
+	Attachments.LeftShoulderAttachment = { CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftArm }
+	Attachments.LeftGripAttachment = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftArm }
+	Attachments.RightShoulderAttachment = { CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightArm }
+	Attachments.RightGripAttachment = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightArm }
+	Attachments.LeftFootAttachment = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), LeftLeg }
+	Attachments.RightFootAttachment = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), RightLeg }
+	Attachments.NeckAttachment = { CFrame.new(0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso }
+	Attachments.BodyFrontAttachment = { CFrame.new(0, 0, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso }
+	Attachments.BodyBackAttachment = { CFrame.new(0, 0, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso }
+	Attachments.LeftCollarAttachment = { CFrame.new(-1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso }
+	Attachments.RightCollarAttachment = { CFrame.new(1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso }
+	Attachments.WaistFrontAttachment = { CFrame.new(0, -1, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso }
+	Attachments.WaistCenterAttachment = { CFrame.new(0, -1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso }
+	Attachments.WaistBackAttachment = { CFrame.new(0, -1, 0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1), Torso }
 
 	for Name, Table in Attachments do
 		MakeAttachment(Name, Table[1], Table[2])
@@ -278,30 +277,58 @@ do -- [[ Scoped Rig Creating. ]]
 	if Animations then
 		task.delay(1, function()
 			local AnimationsToggled = true
+
 			local Pose = "Standing"
 			local CurrentAnim = ""
+
 			local CurrentAnimInstance = nil
 			local CurrentAnimTrack = nil
 			local CurrentAnimKeyframeHandler = nil
+
+			local AnimData = table.create(14, nil)
+			local AnimationTable = table.create(14, nil)
+			local EmoteNames = table.create(7, nil)
+			local Dances = table.create(3, nil)
+
 			local CurrentAnimSpeed = 1.0
 			local JumpAnimTime = 0
 			local Time = 0
-			local AnimationTable = {}
-			local Dances = {"dance1", "dance2", "dance3"}
-			local EmoteNames = { wave = false, point = false, dance1 = true, dance2 = true, dance3 = true, laugh = false, cheer = false}
 
-			local AnimLinks = {
-				-- Movement Anims
-				Idle = "http://www.roblox.com/asset/?id=180435571", Walk = "http://www.roblox.com/asset/?id=180426354", Run = "Run.xml", Jump = "http://www.roblox.com/asset/?id=125750702", Fall = "http://www.roblox.com/asset/?id=180436148", Climb = "http://www.roblox.com/asset/?id=180436334", Sit = "http://www.roblox.com/asset/?id=178130996",
-				-- Animations
-				dance1 = "http://www.roblox.com/asset/?id=182435998", dance2 = "http://www.roblox.com/asset/?id=182436842", dance3 = "http://www.roblox.com/asset/?id=182436935", wave = "http://www.roblox.com/asset/?id=128777973", point = "http://www.roblox.com/asset/?dan=128853357", laugh = "http://www.roblox.com/asset/?id=129423131", cheer = "http://www.roblox.com/asset/?id=129423030"
-			}
+			Dances.wave = false
+			Dances.point = false
+			Dances.dance1 = true
+			Dances.dance2 = true
+			Dances.dance3 = true
+			Dances.laugh = false
+			Dances.cheer = false
 
-			for Name, ID in AnimLinks do
+			Dances[1] = "dance1"
+			Dances[2] = "dance2"
+			Dances[3] = "dance3"
+
+			-- Movement Anims
+			AnimData.Idle = "http://www.roblox.com/asset/?id=180435571"
+			AnimData.Walk = "http://www.roblox.com/asset/?id=180426354"
+			AnimData.Run = "Run.xml"
+			AnimData.Jump = "http://www.roblox.com/asset/?id=125750702"
+			AnimData.Fall = "http://www.roblox.com/asset/?id=180436148"
+			AnimData.Climb = "http://www.roblox.com/asset/?id=180436334"
+			AnimData.Sit = "http://www.roblox.com/asset/?id=178130996"
+
+			-- Animations
+			AnimData.dance1 = "http://www.roblox.com/asset/?id=182435998"
+			AnimData.dance2 = "http://www.roblox.com/asset/?id=182436842"
+			AnimData.dance3 = "http://www.roblox.com/asset/?id=182436935"
+			AnimData.wave = "http://www.roblox.com/asset/?id=128777973"
+			AnimData.point = "http://www.roblox.com/asset/?dan=128853357"
+			AnimData.laugh = "http://www.roblox.com/asset/?id=129423131"
+			AnimData.cheer = "http://www.roblox.com/asset/?id=129423030"
+
+			for Name, ID in AnimData do
 				AnimationTable[Name] = {}
 				AnimationTable[Name].Anim = Instance.new("Animation")
 				AnimationTable[Name].Anim.AnimationId = ID
-			end	
+			end
 
 			local function SetAnimationSpeed(Speed)
 				if Speed ~= CurrentAnimSpeed then
@@ -461,6 +488,8 @@ do -- [[ Scoped Rig Creating. ]]
 					end
 				end
 			end)
+
+			table.clear(AnimData)
 		end)
 	end
 end
@@ -587,7 +616,7 @@ local function ArePlayersNearby() -- : Boolean
 		if BetterIsA(Model, "Model") then
 			if BetterFindFirstChildOfClass(Model, "Humanoid") then
 				if not (Model == Character and Model == FakeRig) then
-					return Model.PrimaryPart ~= nil
+					return not Model.PrimaryPart == nil
 				end
 			end
 		end
@@ -731,6 +760,9 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 
 	Character = Player.Character
 
+	print(Character)
+	print(LastCharacter == Character)
+
 	if Character and LastCharacter ~= Character then
 		LastCharacter = Character
 
@@ -807,7 +839,6 @@ end
 if IsMobile then -- Mobile Support (I know this is badly written but dont attack me please )
 	local StartPosition = nil
 	local IsActive = nil
-
 	local MovementVector = Vector3.zero
 	
 	local function OnTouchBegan(Input)
