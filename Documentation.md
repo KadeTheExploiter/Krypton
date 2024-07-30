@@ -19,52 +19,52 @@
 
 ## API:
 
-### API:GetCharacter()
+### `API:GetCharacter()`
 - Arguments: null
 - Warnings: None.
 - Description: Returns the client-sided rig.
 
-### API:GetRootPart()
+### `API:GetRootPart()`
 - Arguments: null
 - Warnings: None.
 - Description: Returns the client-sided rootpart.
 
-### API:GetHumanoid()
+### `API:GetHumanoid()`
 - Arguments: null
 - Warnings: None.
 - Description: Returns the client-sided humanoid.
 
-### API:GetHatInformation()
+### `API:GetHatInformation()`
 - Arguments: Accessory <Accessory | Hat>
 - Warnings: None.
 - Description: Returns a table with `MeshId` and `TextureId` of the provided accessory.
 
-### API:SetHatAlign()
+### `API:SetHatAlign()`
 - Arguments: Table, Part, CFrame `[ HatInformation <Table> {MeshId: string, TextureId: string}, Part <Part | MeshPart>, CFrame <CFrame> ]`
 - Warnings: None.
 - Description: Stops the real hat from being connected to the client-sided hat and connects it to the new Part with offset if provided.
 
-### API:DisconnectHatAlign()
+### `API:DisconnectHatAlign()`
 - Arguments: Table `[ HatInformation <Table> {MeshId: string, TextureId: string} ]`
 - Warnings: None.
 - Description: Opposite of `SetHatAlign()`, removes the connnection from the real hat and makes it function as before.
 
-### API:SWait()
+### `API:SWait()`
 - Arguments: null
 - Warnings: None.
 - Description: Returns the basic stepped wait, used in numerous scripts.
 
-### API:ForceAnimationsOff()
+### `API:ForceAnimationsOff()`
 - Arguments: null
 - Warnings: None.
 - Description: Fully stops animations on the client sided rig, needed for converting scripts.
 
-### API:GetLoadLibrary()
+### `API:GetLoadLibrary()`
 - Arguments: null
 - Warnings: None.
 - Description: Adds the LoadLibrary to the script environment.
 
-## API:CallFling()
+## `API:CallFling()`
 - Arguments: Model <Model>
 - Warnings: Requires `PresetFling` to be disabled.
 - Description: Flings the Model upon respawn, collisions are required.
