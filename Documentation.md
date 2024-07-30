@@ -1,9 +1,11 @@
 # FAQ / Information.
 
 ### Getting the Rig for scripts
-  - Change variable that gets the server rig (Player.Character for example) and replace it with `workspace:FindFirstChildOfClass("Terrain"):FindFirstChild("RigNameThere")`, Just change RigNameThere to the same as `RigName` setting.
-
-### Humanoid.AutoRotate Cannot be changed.
+  - There is 2 ways for that.
+    - Change variable that gets the server rig (Player.Character for example) and replace it with `workspace:FindFirstChildOfClass("Terrain"):FindFirstChild("RigNameThere")`, Just change RigNameThere to the same as `RigName` setting.
+    - Using the Conversion API, Change variable that gets the server rig (Player.Character for example) and replace it with `Module:GetCharacter()`
+    
+### Humanoid.AutoRotate Cannot be changed. 
   - Information: The issue for that is because it is being constantly overwritten so the shift lock issue can be fixed without having to do 300 lines of code.
 
 ### Constantly Respawning the rig
