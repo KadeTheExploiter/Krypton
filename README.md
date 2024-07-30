@@ -25,6 +25,7 @@
 Configuration = {}
 Configuration.ReturnOnDeath = true
 Configuration.Flinging = true
+Configuration.ConversionAPI = true
 Configuration.PresetFling = Configuration.Flinging -- set to false if you gonna use the one from library
 Configuration.Animations = true
 Configuration.WaitTime = 0.1796
