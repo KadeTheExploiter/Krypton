@@ -49,6 +49,9 @@ loadstring(Module)()
 
 ### Contributions:
 
+#### @blukez
+  - Genesis-Alike Flinging mechanism.
+
 #### @deuces1961
   - Convinced me to stop relying on Lua optimizations, such as defining variables as they don't make any difference on LuaU VMs, some in general optimization tricks as well.
 
