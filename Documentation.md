@@ -12,6 +12,63 @@
 ### Why not limbs?
   - Information: Somewhere early 2023 Roblox threw a patch for the limbs by taking away ownership of it, which makes parts basically unclaimable, the only workaround is to call `SetNetworkOwner()` on the parts, which again requires serversided execution.
 
+# Conversion API
+
+## Description:
+  - Conversion API Is a built-in library in the reanimate which allows you to easily convert scripts, it should be returned alongside with the module, the setting `GetConversionAPI` is required to be enabled in order to receive it.
+
+## API:
+
+### API:GetCharacter()
+- Arguments: null
+- Warnings: None.
+- Description: Returns the client-sided rig.
+
+### API:GetRootPart()
+- Arguments: null
+- Warnings: None.
+- Description: Returns the client-sided rootpart.
+
+### API:GetHumanoid()
+- Arguments: null
+- Warnings: None.
+- Description: Returns the client-sided humanoid.
+
+### API:GetHatInformation()
+- Arguments: Accessory <Accessory | Hat>
+- Warnings: None.
+- Description: Returns a table with `MeshId` and `TextureId` of the provided accessory.
+
+### API:SetHatAlign()
+- Arguments: Table, Part, CFrame `[ HatInformation <Table> {MeshId: string, TextureId: string}, Part <Part | MeshPart>, CFrame <CFrame> ]`
+- Warnings: None.
+- Description: Stops the real hat from being connected to the client-sided hat and connects it to the new Part with offset if provided.
+
+### API:DisconnectHatAlign()
+- Arguments: Table `[ HatInformation <Table> {MeshId: string, TextureId: string} ]`
+- Warnings: None.
+- Description: Opposite of `SetHatAlign()`, removes the connnection from the real hat and makes it function as before.
+
+### API:SWait()
+- Arguments: null
+- Warnings: None.
+- Description: Returns the basic stepped wait, used in numerous scripts.
+
+### API:ForceAnimationsOff()
+- Arguments: null
+- Warnings: None.
+- Description: Fully stops animations on the client sided rig, needed for converting scripts.
+
+### API:GetLoadLibrary()
+- Arguments: null
+- Warnings: None.
+- Description: Adds the LoadLibrary to the script environment.
+
+## API:CallFling()
+- Arguments: Model <Model>
+- Warnings: Requires `PresetFling` to be disabled.
+- Description: Flings the Model upon respawn, collisions are required.
+
 # Configuration
 
 ### Hats
@@ -38,6 +95,11 @@ local Hats = {
 - Arguments: Boolean `[ true / false ]`
 - Warning: Your Simulation Radius will lower drastically every moment it is triggered.
 - Description: Uses your server rig to fling people, Left Mouse Click must be held down to enable flinging state upon respawn, the server rig will follow your mouse and attach to body parts until you let the button off.
+
+### PresetFling
+- Arguments: Boolean `[ true / false ]`
+- Warning: Will cause the `API:CallFling` to not work.
+- Description: Requires `Flinging` to be enabled, enables the default built-in flinging system.
 
 ### Animations
 - Arguments: Boolean `[ true / false ]`
