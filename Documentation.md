@@ -141,6 +141,11 @@ local Hats = {
 - Warnings: Changing the name to something commonly used in experiences such as `Camera` or `Baseplate` might cause the user some trouble when attempting to index the client rig (ex. for scripts.).
 - Description: Renames the client rig to your liking, In some cases it will help with compatibility along other scripts.
 
+### ReturnOnDeath
+- Arguments: Boolean `[ true / false ]`
+- Warning: Will call `return`, which won't run anything past the module if it is not defined as a variable.
+- Returns Enables the Conversion Library to be returned from the module.
+
 ## Debug Options
 
 ### ForceMobileMode 
