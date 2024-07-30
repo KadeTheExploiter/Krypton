@@ -16,6 +16,7 @@
 
 ## Description:
   - Conversion API Is a built-in library in the reanimate which allows you to easily convert scripts, it should be returned alongside with the module, the setting `GetConversionAPI` is required to be enabled in order to receive it.
+  - Please note it is in early stages, and it might eventually become a bigger thing.
 
 ## API Documentation and Explainatory:
 
