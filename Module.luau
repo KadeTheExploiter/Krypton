@@ -636,8 +636,6 @@ local function ConnectHats(Part0, Part1, Offset) -- : nil
 			Part0.AssemblyLinearVelocity = Velocity
 			Part0.AssemblyAngularVelocity = Part1.AssemblyAngularVelocity
 			Part0.CFrame = CFrameOffset + ReverseSleep
-			
-			print(Velocity)
 		end
 	end
 end
