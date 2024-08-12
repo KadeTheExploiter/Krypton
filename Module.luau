@@ -108,6 +108,7 @@ local RespawnEvent = Instance.new("BindableEvent")
 
 local HatsWithDifferentAligns = {}
 local FlingableTargets = {}
+local TempSignals = {}
 
 local HatsInUse = {}
 local RBXSignals = {}
@@ -165,6 +166,7 @@ local function CancelScript()  -- : nil
 	table.clear(KeyInputs)
 	table.clear(HatsWithDifferentAligns)
 	table.clear(FlingableTargets)
+	table.clear(TempSignals)
 	
 	if typeof(Global.KadeAPI) == "table" then
 		table.clear(Global.KadeAPI)
@@ -207,9 +209,9 @@ do -- [[ Scoped Rig Creating. ]]
 	Torso.Size = Vector3.new(2,2,1)
 	RightArm.Size = Vector3.new(1,2,1)
 
-	Head.Transparency = 1
-	Torso.Transparency = 1
-	RightArm.Transparency = 1
+	Head.Transparency = 0.5
+	Torso.Transparency = 0.5
+	RightArm.Transparency = 0.5
 
 	FakeRoot = Torso:Clone()
 	FakeRoot.CanCollide = false
@@ -634,6 +636,8 @@ local function ConnectHats(Part0, Part1, Offset) -- : nil
 			Part0.AssemblyLinearVelocity = Velocity
 			Part0.AssemblyAngularVelocity = Part1.AssemblyAngularVelocity
 			Part0.CFrame = CFrameOffset + ReverseSleep
+			
+			print(Velocity)
 		end
 	end
 end
@@ -818,11 +822,11 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 			if Flinging then
 				if PresetFling then
 					local TemporarySignal = RunService.PostSimulation:Connect(OnPresetFlingEnabled)
-    				repeat task.wait() until not MouseDown
+					repeat task.wait() until not MouseDown
 
-                    TemporarySignal:Disconnect()
-                    TemporarySignal = nil
-                else
+					TemporarySignal:Disconnect()
+					TemporarySignal = nil
+				else
 					FlingModels()
 				end
 			end
@@ -1074,5 +1078,15 @@ Global.KadeAPI = {
 	CallFling = function(Model)
 		assert(BetterIsA(Model, "Model"), "Not a Model.")
 		table.insert(FlingableTargets, Model)
+	end,
+	
+	CreateTempSignal = function(Signal)
+		table.insert(TempSignals, Signal)
+	end
+	
+	DisconnectTempSignals = function()
+		for _, Signal in TempSignals do
+			Signal:Disconnect()
+		end
 	end
 }
