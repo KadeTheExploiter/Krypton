@@ -40,7 +40,7 @@
 ### `API:GetHatInformation()`
 - Arguments: Accessory <Accessory | Hat>
 - Warnings: None.
-- Description: Returns a table with `MeshId` and `TextureId` of the provided accessory.
+- Description: Returns a table with `MeshId`, `TextureId` and `Name` of the provided accessory.
 
 ### `API:SetHatAlign()`
 - Arguments: Table, Part, CFrame `[ HatInformation <Table> {MeshId: string, TextureId: string}, Part <Part | MeshPart>, CFrame <CFrame> ]`
