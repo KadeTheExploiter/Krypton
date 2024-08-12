@@ -1082,7 +1082,7 @@ Global.KadeAPI = {
 	
 	CreateTempSignal = function(Signal)
 		table.insert(TempSignals, Signal)
-	end
+	end,
 	
 	DisconnectTempSignals = function()
 		for _, Signal in TempSignals do
