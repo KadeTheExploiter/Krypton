@@ -542,7 +542,7 @@ local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
 	FakeHandle.Transparency = 1
 
 	local FakeAttachment = BetterFindFirstChildOfClass(FakeHandle, "Attachment")
-	local RigAttachment = FakeRig:FindFirstChild(FakeAttachment.Name, true)
+	local RigAttachment = FakeRig:FindFirstChild(FakeAttachment and FakeAttachment.Name or "", true)
 
 	local FakeHandleWeld = Instance.new("Weld")
 
