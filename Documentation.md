@@ -43,7 +43,7 @@
 - Description: Returns a table with `MeshId`, `TextureId` and `Name` of the provided accessory.
 
 ### `API:SetHatAlign()`
-- Arguments: Table, Part, CFrame `[ HatInformation <Table> {MeshId: string, TextureId: string}, Part <Part | MeshPart>, CFrame <CFrame> ]`
+- Arguments: Table, Part, CFrame `[ HatInformation <Table> {MeshId: string, TextureId: string, Name: string} , Part <Part | MeshPart>, CFrame <CFrame> ]`
 - Warnings: None.
 - Description: Stops the real hat from being connected to the client-sided hat and connects it to the new Part with offset if provided.
 
