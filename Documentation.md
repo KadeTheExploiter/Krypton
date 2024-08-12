@@ -14,13 +14,13 @@
 ### Why not limbs?
   - Information: Somewhere early 2023 Roblox threw a patch for the limbs by taking away ownership of it, which makes parts basically unclaimable, the only workaround is to call `SetNetworkOwner()` on the parts, which again requires serversided execution.
 
-# Conversion API
+# Kade API
 
 ## Description:
-  - Conversion API Is a built-in library in the reanimate which allows you to easily convert scripts, it should be returned alongside with the module, the setting `GetConversionAPI` is required to be enabled in order to receive it.
+  - Kade API Is a built-in library in the reanimate which allows you to easily convert scripts, it should be set as a global variable following the name `KadeAPI`
   - Please note it is in early stages, and it might eventually become a bigger thing.
 
-## API Documentation and Explainatory:
+## KadeAPI Documentation and Explainatory:
 
 ### `API:GetCharacter()`
 - Arguments: null
@@ -143,11 +143,6 @@ local Hats = {
 - Arguments: String `[ string ]`
 - Warnings: Changing the name to something commonly used in experiences such as `Camera` or `Baseplate` might cause the user some trouble when attempting to index the client rig (ex. for scripts.).
 - Description: Renames the client rig to your liking, In some cases it will help with compatibility along other scripts.
-
-### GetConversionAPI
-- Arguments: Boolean `[ true / false ]`
-- Warning: Will call `return`, which won't run anything past the module if it is not defined as a variable.
-- Returns Enables the Conversion Library to be returned from the module.
 
 ## Debug Options
 
