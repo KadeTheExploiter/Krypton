@@ -48,7 +48,7 @@
 - Description: Stops the real hat from being connected to the client-sided hat and connects it to the new Part with offset if provided.
 
 ### `API:DisconnectHatAlign()`
-- Arguments: Table `[ HatInformation <Table> {MeshId: string, TextureId: string} ]`
+- Arguments: Table `[ HatInformation <Table> {MeshId: string, TextureId: string, Name: string} ]`
 - Warnings: None.
 - Description: Opposite of `SetHatAlign()`, removes the connnection from the real hat and makes it function as before.
 
