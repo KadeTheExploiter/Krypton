@@ -20,7 +20,8 @@ local Hats = {
     ["Torso"] = {
         {Texture = "4819722776", Mesh = "4819720316", Name = "MeshPartAccessory", Offset = CFrame.Angles(0, 0, math.rad(-15))}
     },
-}```
+}
+```
 ![image](https://github.com/user-attachments/assets/514ccf0f-81d9-473c-9a5d-0030816369ad)
 https://www.roblox.com/catalog/4645404679/International-Fedora-Thailand
 https://www.roblox.com/catalog/3662265036/International-Fedora-Indonesia
