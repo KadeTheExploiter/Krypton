@@ -1,5 +1,5 @@
 -- \\ Krypton Reanimate, Author: @xyzkade . https://github.com/KadeTheExploiter/Krypton/ // 
--- || Gelatek was there
+-- || gg wp go next
 -- // Defining Variables: Settings
 
 local Global = (getgenv and getgenv()) or _G
