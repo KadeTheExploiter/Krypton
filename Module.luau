@@ -2,7 +2,7 @@
 -- || Gelatek was there
 -- // Defining Variables: Settings
 
-local Global = getgenv and getgenv() or getfenv(0)
+local Global = (getgenv and getgenv()) or getfenv(0)
 local Configuration = Configuration or {}
 
 local RigName = Configuration.RigName or "Evolution, it must've passed you by."
