@@ -1,8 +1,8 @@
 -- \\ Krypton Reanimate, Author: @xyzkade . https://github.com/KadeTheExploiter/Krypton/ // 
--- || gg wp go next
+-- || Gelatek was there
 -- // Defining Variables: Settings
 
-local Global = (getgenv and getgenv()) or _G
+local Global = getgenv()
 local Configuration = Configuration or {}
 
 local RigName = Configuration.RigName or "Evolution, it must've passed you by."
@@ -521,13 +521,25 @@ local function ObtainMeshAndTextureOfAccessory(Accessory) -- <Accessory> : {Mesh
 	end
 end
 
+local function ExtractNumbers(String)
+    return string.match(String, "%d+")
+end
+
 local function FindAccessory(FromWhere, Texture, Mesh, Name) -- <Instance> <string> <string> <string> : Accessory
 	for _, x in FromWhere:GetChildren() do
 		if BetterIsA(x, "Accessory") and x.Name == Name then
+			
 			local HatData = ObtainMeshAndTextureOfAccessory(x)
 
 			if HatData then
-				if string.find(HatData.MeshId, Mesh) and string.find(HatData.TextureId, Texture) then
+				local MeshNumber = ExtractNumbers(HatData.MeshId)
+				local TextureNumber = ExtractNumbers(HatData.TextureId)
+
+				local InputMeshNumber = ExtractNumbers(Mesh)
+				local InputTextureNumber = ExtractNumbers(Texture)
+				
+
+				if MeshNumber == InputMeshNumber and TextureNumber == InputTextureNumber then
 					return x
 				end
 			end
@@ -974,6 +986,14 @@ Global.KadeAPI = {
 		return HatInfo
 	end,
 
+	GetRealCharacter = function(Name) -- Returns FakeRig Model, needed for scripts.
+		repeat task.wait() until Player.Character
+		
+		task.wait(0.5)
+		
+		return Player.Character
+	end,
+	
 	SetHatAlign = function(HatInformation, Part1, Offset) -- Aligns Hat.
 		assert(typeof(HatInformation) == "table",  "HatInformation is not an table.")
 		assert(Part1 and Part1:IsA("BasePart"), "Part1 is not a part.")
@@ -987,7 +1007,9 @@ Global.KadeAPI = {
 		local Timeout = 3
 		local Current = 0
 		
-		while not Accessory or Timeout > Current do
+		print(Accessory)
+		
+		while not Accessory and Timeout > Current do
 			Accessory = FindAccessory(Player.Character, TextureId, MeshId, Name)
 			
 			Current += task.wait()
@@ -1015,7 +1037,7 @@ Global.KadeAPI = {
 		local Timeout = 3
 		local Current = 0
 		
-		while not Accessory or Timeout > Current do
+		while not Accessory and Timeout > Current do
 			Accessory = FindAccessory(Character, HatInformation.TextureId, HatInformation.MeshId, HatInformation.Name)
 			
 			Current += task.wait()
@@ -1075,7 +1097,10 @@ Global.KadeAPI = {
 
 	CallFling = function(Model)
 		assert(BetterIsA(Model, "Model"), "Not a Model.")
-		table.insert(FlingableTargets, Model)
+		
+		if Model ~= Character and Model ~= FakeRig then
+			table.insert(FlingableTargets, Model)
+		end
 	end,
 	
 	CreateTempSignal = function(Signal)
