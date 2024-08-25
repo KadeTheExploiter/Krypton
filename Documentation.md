@@ -27,6 +27,11 @@
 - Warnings: None.
 - Description: Returns the client-sided rig.
 
+### `API:GetRealCharacter()`
+- Arguments: null
+- Warnings: None.
+- Description: Returns the server-sided rig.
+
 ### `API:GetRootPart()`
 - Arguments: null
 - Warnings: None.
@@ -143,6 +148,16 @@ local Hats = {
 - Arguments: String `[ string ]`
 - Warnings: Changing the name to something commonly used in experiences such as `Camera` or `Baseplate` might cause the user some trouble when attempting to index the client rig (ex. for scripts.).
 - Description: Renames the client rig to your liking, In some cases it will help with compatibility along other scripts.
+
+### AccessoryFallbackDefaults
+- Arguments: Boolean `[ true / false ]`
+- Warning: If you want to gimmick korblox or something alike, turn it off.
+- Description: Checks if `Hats` table for errors, if there are missing or incorrect arguments, it will be automatically replaced with default ones.
+
+### OverlayFakeCharacter
+- Arguments: Boolean `[ true / false ]`
+- Warning: None.
+- Description: Shows the baseparts of the client-sided rig, thus setting their Transparency to 0.5.
 
 ## Debug Options
 
