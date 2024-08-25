@@ -7,7 +7,7 @@ local Configuration = Configuration or {}
 
 local RigName = Configuration.RigName or "Evolution, it must've passed you by."
 
-local WaitTime = Configuration.WaitTime or 0.2
+local WaitTime = Configuration.WaitTime or 0.212
 local TeleportOffsetRadius = Configuration.TeleportOffsetRadius or 12
 
 local Flinging = Configuration.Flinging or true
@@ -20,7 +20,7 @@ local ForceMobileMode = Configuration.ForceMobileMode or false
 local ForceDesktopMode = Configuration.ForceDesktopMode or false
 local NoCollisions = Configuration.NoCollisions or Flinging or false
 local SetSimulationRadius = Configuration.SetSimulationRadius or true
-local OverlayFakeCharacter = Configuration.OverlayFakeCharacter or true
+local OverlayFakeCharacter = Configuration.OverlayFakeCharacter or false
 local DisableCharacterScripts = Configuration.DisableCharacterScripts or true
 local AccessoryFallbackDefaults = Configuration.AccessoryFallbackDefaults or true
 
