@@ -54,36 +54,30 @@ local DefaultHats = {
 local Hats = Configuration.Hats or DefaultHats
 
 local function BetterFindFirstChildOfClass(Parent, ClassName) -- <Any> <String> : Instance
-	if Parent then
-		local Value = Parent:FindFirstChildOfClass(ClassName)
-		if Value then
-			return Value
-		end
-	end
+	return Parent and Parent:FindFirstChildOfClass(ClassName)
 end
 
 local function BetterIsA(Instance, ClassName) -- <Any> <String> : Instance
-	if Instance then
-		local Parent = Instance.Parent
-
-		if Parent then
-			return Instance:IsA(ClassName)
-		end
-	end
+	return Instance and Instance.Parent and Instance:IsA(ClassName)
 end
 
 local function GetInstanceWithTime(Parent, Class, Name, Timeout)  -- <Any> <String> <String> <Number> : Instance
 	local CurTime = 0
-
+	local Cache = Parent:GetChildren()
+	
 	while Timeout > CurTime do
-		for _, v in Parent:GetChildren() do
-			if BetterIsA(v, Class) and v.Name == (Name or v.Name) then
+		for _, v in Cache do
+			if BetterIsA(v, Class) and v.Name == (Name or v.Name) then	
+				table.clear(Cache)
 				return v
 			end
 		end
 
+		Cache = Parent:GetChildren()
 		CurTime = CurTime + task.wait()
 	end
+	
+	table.clear(Cache)
 end
 
 local Workspace = game:GetService("Workspace")
@@ -620,7 +614,8 @@ local function RecreateAccessory(Accessory) -- <Accessory> : Accessory
 end
 
 local function SetUpHatConfig() -- : nil
-	for _, Hat in FakeRig:GetDescendants() do
+	local RigDescendants = FakeRig:GetDescendants()
+	for _, Hat in RigDescendants do
 		if BetterIsA(Hat, "Accessory") then
 			Hat:Destroy()
 		end
@@ -907,7 +902,7 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 			end
 
 			BringCharacter()
-			SetUpHatConfig()
+			task.defer(SetUpHatConfig)
 
 			FakeRigChildren = FakeRig:GetChildren()
 
@@ -995,6 +990,7 @@ end
 SetCameraTarget()
 SetUpHatConfig()
 
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
 Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
 Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
 
@@ -1014,6 +1010,7 @@ RBXSignals[10] = UserInputService.InputBegan:Connect(function(Input, GameProcess
 RBXSignals[11] = UserInputService.InputEnded:Connect(function(Input, GameProcessed) OnInputChange(Input, not GameProcessed, false) end)
 
 task.wait(WaitTime)
+
 
 FakeRigChildren = FakeRig:GetChildren()
 
