@@ -2,7 +2,7 @@
 -- || Gelatek was there
 -- // Defining Variables: Settings
 
-local Global = (getgenv and getgenv()) or getfenv(0)
+local Global = getgenv()
 local Configuration = Configuration or {}
 
 local RigName = Configuration.RigName or "Evolution, it must've passed you by."
@@ -20,31 +20,38 @@ local ForceMobileMode = Configuration.ForceMobileMode or false
 local ForceDesktopMode = Configuration.ForceDesktopMode or false
 local NoCollisions = Configuration.NoCollisions or Flinging or false
 local SetSimulationRadius = Configuration.SetSimulationRadius or true
+local OverlayFakeCharacter = Configuration.OverlayFakeCharacter or true
 local DisableCharacterScripts = Configuration.DisableCharacterScripts or true
+local AccessoryFallbackDefaults = Configuration.AccessoryFallbackDefaults or true
 
-local Hats = Configuration.Hats or {
+local DefaultHats = {
 	["Right Arm"] = {
-		{Texture = "14255544465", Mesh = "14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))}
+		{Texture = "14255544465", Mesh = "14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "4645402630", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(90))}
 	},
 
 	["Left Arm"] = {
-		{Texture = "14255544465", Mesh = "14255522247", Name = "LARM", Offset = CFrame.Angles(0, 0, math.rad(90))}
+		{Texture = "14255544465", Mesh = "14255522247", Name = "LARM", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "3650139425", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(-90))}
 	},
 
 	["Right Leg"] = {
-		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (RARM)", Offset = CFrame.Angles(0, 0, math.rad(90))}
+		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (RARM)", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "4622077774", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(90))}
 	},
 
 	["Left Leg"] = {
-		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (LARM)", Offset = CFrame.Angles(0, 0, math.rad(90))}
+		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (LARM)", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "3860099469", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(-90))}
 	},	
 
 	["Torso"] = {
-		{Texture = "13415110780", Mesh = "13421774668", Name = "MeshPartAccessory", Offset = CFrame.identity}
+		{Texture = "13415110780", Mesh = "13421774668", Name = "MeshPartAccessory", Offset = CFrame.identity},
+		{Texture = "4819722776", Mesh = "4819720316", Name = "MeshPartAccessory", Offset = CFrame.Angles(0, 0, math.rad(-15))}
 	},
 }
 
--- // Defining Variables: Game Related
+local Hats = Configuration.Hats or DefaultHats
 
 local function BetterFindFirstChildOfClass(Parent, ClassName) -- <Any> <String> : Instance
 	if Parent then
@@ -167,6 +174,7 @@ local function CancelScript()  -- : nil
 	table.clear(HatsWithDifferentAligns)
 	table.clear(FlingableTargets)
 	table.clear(TempSignals)
+	table.clear(DefaultHats)
 	
 	if typeof(Global.KadeAPI) == "table" then
 		table.clear(Global.KadeAPI)
@@ -209,9 +217,10 @@ do -- [[ Scoped Rig Creating. ]]
 	Torso.Size = Vector3.new(2,2,1)
 	RightArm.Size = Vector3.new(1,2,1)
 
-	Head.Transparency = 1
-	Torso.Transparency = 1
-	RightArm.Transparency = 1
+	local Transparency = OverlayFakeCharacter and 0.5 or 1
+	Head.Transparency = Transparency
+	Torso.Transparency = Transparency
+	RightArm.Transparency = Transparency
 
 	FakeRoot = Torso:Clone()
 	FakeRoot.CanCollide = false
@@ -263,6 +272,39 @@ do -- [[ Scoped Rig Creating. ]]
 	FakeHumanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
 	FakeHumanoid:ChangeState(Enum.HumanoidStateType.Landed)
 
+	if AccessoryFallbackDefaults then
+		for Name, Data in DefaultHats do
+			local HatsData = Hats[Name]
+			local Flagged = false
+			
+			if HatsData then
+				if typeof(HatsData) == "table" then
+					for _, Hat in ipairs(HatsData) do
+						local Types = {Name = "string", Texture = "string", Mesh = "string", Offset = "CFrame"}
+						
+						for Key, Type in Types do
+							if typeof(Hat[Key]) ~= Type then
+								--print("Property:", Key, "Value:", Hat[Key], "Fail")
+								Flagged = true
+							end
+						end
+					end
+				else
+					--print("HatsData is not a table.")
+					Flagged = true
+				end
+			else
+				--print("HatsData does not exist.")
+				Flagged = true
+			end
+			
+			if Flagged then
+				--print("Incorrect Arguments or Missing: ", Name)
+				Hats[Name] = table.clone(Data)
+			end
+		end
+	end
+
 	local Attachments = {
 		HairAttachment = {CFrame.new(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head},
 		HatAttachment = {CFrame.new(0, 0.6, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Head},
@@ -289,7 +331,7 @@ do -- [[ Scoped Rig Creating. ]]
 	end
 
 	table.clear(Attachments)
-
+	
 	if Animations then
 		task.delay(1, function()
 			local AnimationsToggled = true
@@ -522,7 +564,7 @@ local function ObtainMeshAndTextureOfAccessory(Accessory) -- <Accessory> : {Mesh
 end
 
 local function ExtractNumbers(String)
-    return string.match(String, "%d+")
+	return string.match(String, "%d+")
 end
 
 local function FindAccessory(FromWhere, Texture, Mesh, Name) -- <Instance> <string> <string> <string> : Accessory
@@ -605,12 +647,10 @@ local function SetUpHatConfig() -- : nil
 			local Accessory = FindAccessory(Character, Info.Texture, Info.Mesh, Info.Name)
 
 			if Accessory then
-				if not HatsInUse[Handle] then
-					local Handle = GetFirstPart(Accessory)
+				local Handle = GetFirstPart(Accessory)
 
-					if Handle then
-						HatsInUse[Handle] = {FakeRig:FindFirstChild(Index), Info.Offset}
-					end
+				if Handle and not HatsInUse[Handle] then
+					HatsInUse[Handle] = {FakeRig:FindFirstChild(Index), Info.Offset}
 				end
 			end
 		end
@@ -640,7 +680,7 @@ local function ConnectHats(Part0, Part1, Offset) -- : nil
 			local Part1Velocity = Part1.AssemblyLinearVelocity * Part1Magnitude
 			local CalculatedVel = Part1Velocity * 2.5
 
-			local ClampedAxisY = math.clamp(Part1Velocity.Y, SafeYAxis, 1024)
+			local ClampedAxisY = math.clamp(Part1Velocity.Y, SafeYAxis, 512)
 			local Velocity = Vector3.new(CalculatedVel.X, ClampedAxisY, CalculatedVel.Z)
 			
 			local CFrameOffset = Part1.CFrame * Offset
@@ -680,11 +720,15 @@ local function FlingModels() -- : nil
 		local PrimaryPart = Model.PrimaryPart
 		
 		if PrimaryPart then
-			for _ = 1, 35 do
+			for _ = 1, 27 do
 				RootPart.CFrame = CFrame.new(PrimaryPart.Position + PrimaryPart.AssemblyLinearVelocity * Player:GetNetworkPing()*30)
 				RootPart.AssemblyLinearVelocity = Vector3.new(16000, 16000, 16000)
 
-				task.wait()
+				if PrimaryPart.AssemblyAngularVelocity.Magnitude > 75 then
+					break
+				end
+				
+				RunService.PostSimulation:Wait()
 			end
 		end
 	end
@@ -821,6 +865,14 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 			Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
 			Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 
+			TeleportOffset = FakeRoot.Position + GetRandomRadius()
+			
+			while ArePlayersNearby() do
+				TeleportOffset = FakeRoot.Position + GetRandomRadius()
+				
+				task.wait()
+			end
+			
 			if DisableCharacterScripts then
 				for _, Instance in Character:GetDescendants() do
 					if BetterIsA(Instance, "LocalScript") then
@@ -841,17 +893,9 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 				end
 			end
 
-			TeleportOffset = FakeRoot.Position + GetRandomRadius()
-
-			while ArePlayersNearby() do
-				TeleportOffset = FakeRoot.Position + GetRandomRadius()
-
-				task.wait()
-			end
-
 			RootPart.AssemblyLinearVelocity = Vector3.zero
 			RootPart.AssemblyAngularVelocity = Vector3.zero
-			Character:PivotTo(CFrame.new(TeleportOffset))
+			RootPart.CFrame = CFrame.new(TeleportOffset)
 
 			task.wait(WaitTime)
 
@@ -862,7 +906,6 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 			RunService.PostSimulation:Wait()
 
 			Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-
 			Character:BreakJoints()
 		end
 	end
@@ -989,8 +1032,6 @@ Global.KadeAPI = {
 	GetRealCharacter = function(Name) -- Returns FakeRig Model, needed for scripts.
 		repeat task.wait() until Player.Character
 		
-		task.wait(0.5)
-		
 		return Player.Character
 	end,
 	
@@ -1006,8 +1047,6 @@ Global.KadeAPI = {
 		local Accessory = FindAccessory(Player.Character, TextureId, MeshId, Name)
 		local Timeout = 3
 		local Current = 0
-		
-		print(Accessory)
 		
 		while not Accessory and Timeout > Current do
 			Accessory = FindAccessory(Player.Character, TextureId, MeshId, Name)
