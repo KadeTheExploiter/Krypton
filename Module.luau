@@ -7,7 +7,7 @@ local Configuration = Configuration or {}
 
 local RigName = Configuration.RigName or "Evolution, it must've passed you by."
 
-local WaitTime = Configuration.WaitTime or 0.215
+local WaitTime = Configuration.WaitTime or 0.2
 local TeleportOffsetRadius = Configuration.TeleportOffsetRadius or 12
 
 local Flinging = Configuration.Flinging or true
@@ -736,6 +736,19 @@ local function FlingModels() -- : nil
 	table.clear(FlingableTargets)
 end
 
+local function BringCharacter()
+	local Time = 0
+	
+	while WaitTime > Time do
+		if RootPart then
+			RootPart.AssemblyLinearVelocity = Vector3.zero
+			RootPart.AssemblyAngularVelocity = Vector3.zero
+			RootPart.CFrame = CFrame.new(TeleportOffset)
+		end
+		
+		Time += task.wait()
+	end
+end
 -- // RunTime: Event functions
 
 local function SetCameraTarget() -- Function | SIGNAL: Camera:GetPropertySignalChanged("CameraSubject")
@@ -893,12 +906,7 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 				end
 			end
 
-			RootPart.AssemblyLinearVelocity = Vector3.zero
-			RootPart.AssemblyAngularVelocity = Vector3.zero
-			RootPart.CFrame = CFrame.new(TeleportOffset)
-
-			task.wait(WaitTime)
-
+			BringCharacter()
 			SetUpHatConfig()
 
 			FakeRigChildren = FakeRig:GetChildren()
