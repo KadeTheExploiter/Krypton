@@ -2,21 +2,7 @@
 -- || Gelatek was there
 -- // Defining Variables: Settings
 
---[[
-Krypton Update coming soon (1.6)
-- Major memory leak optimizations (done)
-- No more death sound every death, (done0)
-- Reduced cycles for `KadeAPI.CallFling` (done)
-- Memory Optimization (done)
-- Reanimate can now be loaded even before the game loads (example, roblox studio localscript) (done)
-- Added  `NoBodyNearby` setting for hiding the server character on load (scrapped for a while)
-- Hats are now automatically added to the noclip loop, (scrapped)
-- Server character will no longer have collisions on client (done)
-- Fixed minor bug issues (done)
-- No more Lag after using the reanimate for quite long time (done)
-]]
-
-local Global = getgenv() -- just for studio
+local Global = getgenv()
 
 if not game.Loaded then
 	game.Loaded:Wait()
