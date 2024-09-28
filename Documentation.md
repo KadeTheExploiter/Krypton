@@ -159,7 +159,8 @@ local Hats = {
 - Warning: None.
 - Description: Shows the baseparts of the client-sided rig, thus setting their Transparency to 0.5.
 
-## Debug Options
+> [!WARNING]
+> These are debug options, use them at your own responsibility.
 
 ### ForceMobileMode 
 - Arguments: BOOL `[ true / false ]`
