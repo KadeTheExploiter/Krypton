@@ -1,5 +1,6 @@
--- TESTING RELEASE, ANY BUGS ARE APPRECIATED
--- CURRENT RELEASE: 1.7-debug_2
+-- TESTING RELEASE, ANY BUG REPORTS ARE APPRECIATED
+-- CURRENT RELEASE: 1.7-debug_3
+
 
 -- \\ Krypton Reanimate, Author: @xyzkade . https://github.com/KadeTheExploiter/Krypton/ // 
 -- || Gelatek was there
@@ -11,26 +12,51 @@ if not game.Loaded then
 	game.Loaded:Wait()
 end 
 
-Configuration = {}
+Config = Global.Configuration or {
+	ReturnOnDeath = true,
+	Flinging = true,
+	SetCharacter = false,
+	PresetFling = true, -- if set to false, KadeAPI.CallFling() won't do anything.
+	Animations = true,
+	WaitTime = 0.251,
+	TeleportOffsetRadius = 20,
+	NoCollisions = true,
+	AntiVoiding = true,
+	SetSimulationRadius = true,
+	DisableCharacterScripts = true,
+	AccessoryFallbackDefaults = true,
+	OverlayFakeCharacter = false,
+	NoBodyNearby = true,
+	LimitHatsPerLimb = true,
+	ShowClientHats = true,
+	IgnoreKadeAPI = false,
+	
+	Hats = nil, -- Set to nil if you want to use defaults.
+}
 
-local RigName = Configuration.RigName or "Evolution, it must've passed you by."
+local RigName = Config.RigName or "Evolution, it must've passed you by."
 
-local WaitTime = Configuration.WaitTime or 0.25
-local TeleportOffsetRadius = Configuration.TeleportOffsetRadius or 12
+local WaitTime = Config.WaitTime or 0.25
+local TeleportOffsetRadius = Config.TeleportOffsetRadius or 12
 
-local Flinging = Configuration.Flinging or true
-local PresetFling = Flinging and Configuration.PresetFling or nil
+local Flinging = Config.Flinging or nil
+local PresetFling = Flinging and Config.PresetFling or nil
 
-local Animations = Configuration.Animations or true
-local AntiVoiding = Configuration.AntiVoiding or nil
-local ReturnOnDeath = Configuration.ReturnOnDeath or nil
-local ForceMobileMode = Configuration.ForceMobileMode or nil
-local ForceDesktopMode = Configuration.ForceDesktopMode or nil
-local NoCollisions = Configuration.NoCollisions or Flinging or nil
-local SetSimulationRadius = Configuration.SetSimulationRadius or true
-local OverlayFakeCharacter = Configuration.OverlayFakeCharacter or true
-local DisableCharacterScripts = Configuration.DisableCharacterScripts or true
-local AccessoryFallbackDefaults = Configuration.AccessoryFallbackDefaults or true
+local Animations = Config.Animations or nil
+local AntiVoiding = Config.AntiVoiding or nil
+local SetCharacter = Config.SetCharacter or nil
+local NoBodyNearby = Config.NoBodyNearby or nil -- Recommended to have setsimulationradius enabled!
+local IgnoreKadeAPI = Config.IgnoreKadeAPI or nil
+local ReturnOnDeath = Config.ReturnOnDeath or nil
+local ShowClientHats = Config.ShowClientHats or nil
+local ForceMobileMode = Config.ForceMobileMode or nil
+local ForceDesktopMode = Config.ForceDesktopMode or nil
+local LimitHatsPerLimb = Config.LimitHatsPerLimb or nil
+local NoCollisions = Config.NoCollisions or Flinging or nil
+local SetSimulationRadius = Config.SetSimulationRadius or nil
+local OverlayFakeCharacter = Config.OverlayFakeCharacter or nil
+local DisableCharacterScripts = Config.DisableCharacterScripts or nil
+local AccessoryFallbackDefaults = Config.AccessoryFallbackDefaults or nil
 
 local DefaultHats = {
 	["Right Arm"] = {
@@ -60,7 +86,7 @@ local DefaultHats = {
 }
 
 -- namecalls sucks
-local Hats = Configuration.Hats or DefaultHats
+local Hats = Config.Hats or DefaultHats
 
 local IsA = game.IsA
 local FindFirstChildOfClass = game.FindFirstChildOfClass
@@ -598,10 +624,14 @@ local function SetUpHatConfig() -- : nil
 	for Index, Data in Hats do
 		for _, Info in Data do
 			local Accessory = FindAccessory(Character, Info.Texture, Info.Mesh, Info.Name)
-
+			
 			ProcessAccessory(Accessory, function(Handle)
 				HatsInUse[Handle] = {FindFirstChild(FakeRig, Index), Info.Offset}
 			end)
+			
+			if LimitHatsPerLimb then
+				continue
+			end
 		end
 	end
 
@@ -617,6 +647,10 @@ end
 
 local function ConnectHats(Part0, Part1, Offset) -- : nil
 	if Part0 and Part1 and Part0.Parent and Part1.Parent and Part0.ReceiveAge == 0 then
+		if ShowClientHats then
+			Part1.Transparency = 1
+		end
+		
 		local Part1Magnitude = Part1.Size.Magnitude
 		local Part1Velocity = Part1.AssemblyLinearVelocity * Part1Magnitude
 		local CalculatedVel = Part1Velocity * 2.5
@@ -629,6 +663,9 @@ local function ConnectHats(Part0, Part1, Offset) -- : nil
 		Part0.AssemblyLinearVelocity = Velocity
 		Part0.AssemblyAngularVelocity = Part1.AssemblyAngularVelocity
 		Part0.CFrame = CFrameOffset + ReverseSleep
+		
+	elseif ShowClientHats then
+		Part1.Transparency = 0.5
 	end
 end
 
@@ -690,12 +727,10 @@ end
 -- // RunTime: Event functions
 
 local function UpdateCameraCFrame() -- Function | SIGNAL: Camera:GetPropertySignalChanged("CameraSubject")
-	if Camera.CameraSubject ~= FakeHumanoid then
-		PreviousCameraCFrame = Camera.CFrame
+	PreviousCameraCFrame = Camera.CFrame
 		
-		RunService.PreRender:Wait()
-		Camera.CFrame = PreviousCameraCFrame
-	end
+	RunService.PreRender:Wait()
+	Camera.CFrame = PreviousCameraCFrame
 end
 
 local function OnInputChange(Input, GameProcessed, Bool) -- SIGNAL: UIS.InputBegan | UIS.InputEnded
@@ -822,17 +857,18 @@ local function OnPreSimulation() -- SIGNAL: RunService.PreSimulation
 	end
 end
 
-local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
-	table.clear(HatsInUse)
-	table.clear(Descendants)
-	table.clear(FakeRigChildren)
-	table.clear(Blacklist)
-	
+local function OnCharacterAdded(NewCharacter) -- SIGNAL : Player.CharacterAdded
 	UpdateCameraCFrame()
-
-	Character = Player.Character
-
-	if Character and LastCharacter ~= Character then
+	
+	if NewCharacter ~= FakeRig then
+		Character = NewCharacter
+		
+		table.clear(HatsInUse)
+		table.clear(Descendants)
+		table.clear(FakeRigChildren)
+		table.clear(Blacklist)
+		
+		print(Character.Name); warn(LastCharacter.Name)
 		LastCharacter = Character
 
 		Humanoid = GetInstanceWithTime(Character, "Humanoid", nil, 3)
@@ -842,14 +878,11 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 			ForceSetProperty(FindFirstChild(FakeRoot, "Died"), "Volume", 0)
 			Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
 			Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-
-			task.defer(function()
-				Descendants = GetDescendants(Character)
-			end)
-
-			TeleportOffset = FakeRoot.Position + GetRandomRadius()
+			
+			TeleportOffset = FakeRoot.Position + GetRandomRadius() + Vector3.new(0, NoBodyNearby and FallenPartsDestroyHeight + 15 or 0, 0)
+			
 			while ArePlayersNearby() do
-				TeleportOffset = FakeRoot.Position + GetRandomRadius()
+				TeleportOffset = FakeRoot.Position + GetRandomRadius() + Vector3.new(0, NoBodyNearby and FallenPartsDestroyHeight + 15 or 0, 0)
 				task.wait()
 			end
 
@@ -879,9 +912,18 @@ local function OnCharacterAdded() -- SIGNAL : Player.CharacterAdded
 
 				Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
 				Character:BreakJoints()
+				
+				task.wait(0.125)
+				
+				Descendants = GetDescendants(Character)
 				SetUpHatConfig()
+				
+				if SetCharacter then
+					PSWait()
+					Player.Character = FakeRig
+				end
 			end)
-
+			
 			FakeRigChildren = GetChildren(FakeRig)
 		end
 	end
@@ -923,146 +965,161 @@ table.insert(RBXSignals, UserInputService.InputBegan:Connect(function(Input, Gam
 table.insert(RBXSignals, UserInputService.InputEnded:Connect(function(Input, GameProcessed) OnInputChange(Input, not GameProcessed, nil) end))
 CameraHandle = Camera:GetPropertyChangedSignal("CameraSubject"):Connect(UpdateCameraCFrame)
 
+if SetCharacter then
+	Player.Character = FakeRig
+end
+
 FakeRigChildren = GetChildren(FakeRig)
 
-Global.KadeAPI = {
-	GetCharacter = function() -- Returns FakeRig Model, needed for scripts.
-		return FakeRig
-	end,
+local function KadeAPI_Init()
+	return {
+		GetCharacter = function() -- Returns FakeRig Model, needed for scripts.
+			return FakeRig
+		end,
 
-	GetHumanoid = function() -- Returns GetHumanoid
-		return FakeHumanoid
-	end,
+		GetHumanoid = function() -- Returns GetHumanoid
+			return FakeHumanoid
+		end,
 
-	GetRootPart = function() -- Returns HumanoidRootPart
-		return FakeRoot
-	end,
+		GetRootPart = function() -- Returns HumanoidRootPart
+			return FakeRoot
+		end,
 
-	GetHatInformation = function(Hat) -- Returns HumanoidRootPart
-		local HatInfo = ObtainMeshAndTextureOfAccessory(Hat)
-		HatInfo.Name = Hat.Name
+		GetHatInformation = function(Hat) -- Returns HumanoidRootPart
+			local HatInfo = ObtainMeshAndTextureOfAccessory(Hat)
+			HatInfo.Name = Hat.Name
 
-		return HatInfo
-	end,
+			return HatInfo
+		end,
 
-	GetRealCharacter = function(Name) -- Returns RealRig Model, needed for scripts.
-		repeat task.wait() until Player.Character
+		GetRealCharacter = function(Name) -- Returns RealRig Model, needed for scripts.
+			repeat task.wait() until Player.Character
 
-		return Player.Character
-	end,
+			return Player.Character
+		end,
 
-	SetHatAlign = function(HatInformation, Part1, Offset) -- Aligns Hat.
-		assert(typeof(HatInformation) == "table",  "HatInformation is not an table.")
-		assert(Part1 and Part1:IsA("BasePart"), "Part1 is not a part.")
-		assert(typeof(Offset) == "CFrame", "Offset is not a part.")
+		SetHatAlign = function(HatInformation, Part1, Offset) -- Aligns Hat.
+			assert(typeof(HatInformation) == "table",  "HatInformation is not an table.")
+			assert(Part1 and Part1:IsA("BasePart"), "Part1 is not a part.")
+			assert(typeof(Offset) == "CFrame", "Offset is not a part.")
 
-		local TextureId = HatInformation.TextureId
-		local MeshId = HatInformation.MeshId
-		local Name = HatInformation.Name
+			local TextureId = HatInformation.TextureId
+			local MeshId = HatInformation.MeshId
+			local Name = HatInformation.Name
 
-		local Accessory = nil
-		local Timeout = 3
-		local Current = 0
+			local Accessory = nil
+			local Timeout = 3
+			local Current = 0
 
-		while not Accessory and Timeout > Current do
-			Accessory = FindAccessory(Player.Character, TextureId, MeshId, Name)
+			while not Accessory and Timeout > Current do
+				Accessory = FindAccessory(Player.Character, TextureId, MeshId, Name)
 
-			Current += task.wait()
-		end
+				Current += task.wait()
+			end
 
-		if not Accessory then
-			error("Accessory has not been found in Character.")
-		end
+			if not Accessory then
+				error("Accessory has not been found in Character.")
+			end
 
-		local Handle = GetFirstPart(Accessory)
+			local Handle = GetFirstPart(Accessory)
 
-		if Handle then
-			local Dictionary = table.find(HatsInUse, Handle)
-			table.remove(HatsInUse, Dictionary)
-
-			table.insert(HatsWithDifferentAligns, {TextureId, MeshId, Name, Part1, Offset})
-			HatsInUse[Handle] = {Part1, Offset}
-		end
-	end,
-
-	DisconnectHatAlign = function(HatInformation) -- Disconnects hat
-		assert(typeof(HatInformation) == "table",  "HatInformation is not an table.")
-
-		local Accessory = nil
-		local Timeout = 3
-		local Current = 0
-
-		while not Accessory and Timeout > Current do
-			Accessory = FindAccessory(Character, HatInformation.TextureId, HatInformation.MeshId, HatInformation.Name)
-
-			Current += task.wait()
-		end
-
-		if not Accessory then
-			error("Accessory has not been found in Character.")
-		end
-
-		local Handle = GetFirstPart(Accessory)
-
-		for Table, Value in HatsWithDifferentAligns do
-			local UsedAccessory = FindAccessory(Character, Value[1], Value[2], Value[3]) 
-
-			if UsedAccessory and UsedAccessory == Accessory then
-				local UsedHandle = GetFirstPart(UsedAccessory)
-
-				local Dictionary = table.find(HatsInUse, UsedHandle)
+			if Handle then
+				local Dictionary = table.find(HatsInUse, Handle)
 				table.remove(HatsInUse, Dictionary)
 
-				local Dictionary2 = table.find(HatsWithDifferentAligns, Table) -- seems ugly but idc
-				table.remove(HatsWithDifferentAligns, Dictionary)
+				table.insert(HatsWithDifferentAligns, {TextureId, MeshId, Name, Part1, Offset})
+				HatsInUse[Handle] = {Part1, Offset}
+			end
+		end,
 
-				if UsedHandle then
-					local FakeAccessory = RecreateAccessory(UsedAccessory)
+		DisconnectHatAlign = function(HatInformation) -- Disconnects hat
+			assert(typeof(HatInformation) == "table",  "HatInformation is not an table.")
 
-					if FakeAccessory then
-						HatsInUse[UsedHandle] = {GetFirstPart(FakeAccessory), CFrame.identity}
+			local Accessory = nil
+			local Timeout = 3
+			local Current = 0
+
+			while not Accessory and Timeout > Current do
+				Accessory = FindAccessory(Character, HatInformation.TextureId, HatInformation.MeshId, HatInformation.Name)
+
+				Current += task.wait()
+			end
+
+			if not Accessory then
+				error("Accessory has not been found in Character.")
+			end
+
+			local Handle = GetFirstPart(Accessory)
+
+			for Table, Value in HatsWithDifferentAligns do
+				local UsedAccessory = FindAccessory(Character, Value[1], Value[2], Value[3]) 
+
+				if UsedAccessory and UsedAccessory == Accessory then
+					local UsedHandle = GetFirstPart(UsedAccessory)
+
+					local Dictionary = table.find(HatsInUse, UsedHandle)
+					table.remove(HatsInUse, Dictionary)
+
+					local Dictionary2 = table.find(HatsWithDifferentAligns, Table) -- seems ugly but idc
+					table.remove(HatsWithDifferentAligns, Dictionary)
+
+					if UsedHandle then
+						local FakeAccessory = RecreateAccessory(UsedAccessory)
+
+						if FakeAccessory then
+							HatsInUse[UsedHandle] = {GetFirstPart(FakeAccessory), CFrame.identity}
+						end
 					end
 				end
 			end
-		end
-	end,
+		end,
 
-	SWait = PSWait, -- Stepped Wait
+		SWait = PSWait, -- Stepped Wait
 
-	SetAnimationState = function(Status) -- Stops Animations
-		local Animator = FindFirstChildOfClass(FakeHumanoid, "Animator")
-		local Animate = FindFirstChild(FakeRig, "Animate")
+		SetAnimationState = function(Status) -- Stops Animations
+			local Animator = FindFirstChildOfClass(FakeHumanoid, "Animator")
+			local Animate = FindFirstChild(FakeRig, "Animate")
 
-		if Animate then
-			Animate.Disabled = not Status
-		end
+			if Animate then
+				Animate.Disabled = not Status
+			end
 
-		if not Status and Animator then
-			for _, Track in Animator:GetPlayingAnimationTracks() do
-				Track:Stop()
+			if not Status and Animator then
+				for _, Track in Animator:GetPlayingAnimationTracks() do
+					Track:Stop()
+				end
+			end
+		end,
+
+		GetLoadLibrary = function()
+			-- loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Uncategorized-Scripts/main/LoadLib.lua"))()
+		end,
+
+		CallFling = function(Model)
+			assert(IsA(Model, "Model"), "Not a Model.")
+
+			if Model ~= Character and Model ~= FakeRig then
+				table.insert(FlingableTargets, Model)
+			end
+		end,
+
+		CreateTempSignal = function(Signal)
+			table.insert(TempSignals, Signal)
+		end,
+
+		DisconnectTempSignals = function()
+			for _, Signal in TempSignals do
+				Signal:Disconnect()
 			end
 		end
-	end,
+	}
+end
 
-	GetLoadLibrary = function()
-		-- loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Uncategorized-Scripts/main/LoadLib.lua"))()
-	end,
+if not IgnoreKadeAPI then
+	Global.KadeAPI = KadeAPI_Init()
+end
 
-	CallFling = function(Model)
-		assert(IsA(Model, "Model"), "Not a Model.")
+-- Start
 
-		if Model ~= Character and Model ~= FakeRig then
-			table.insert(FlingableTargets, Model)
-		end
-	end,
-
-	CreateTempSignal = function(Signal)
-		table.insert(TempSignals, Signal)
-	end,
-
-	DisconnectTempSignals = function()
-		for _, Signal in TempSignals do
-			Signal:Disconnect()
-		end
-	end
-}
+local MainModule = KadeAPI_Init()
+local Character = MainModule.GetCharacter()
