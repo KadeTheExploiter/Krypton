@@ -85,7 +85,7 @@ local DefaultHats = {
 	},
 }
 
--- namecalls sucks
+-- namecalls sucks owo
 local Hats = Config.Hats or DefaultHats
 
 local IsA = game.IsA
@@ -174,7 +174,7 @@ local CanCallSimRadius = SetSimulationRadius and ForceSetProperty(Player, "Simul
 
 ForceSetProperty(Workspace, "StreamingEnabled", false)
 
--- // RunTime: Creating FakeRig
+-- // RunTime: Creating FakeRig :3
 
 local FakeRig = Instance.new("Model")
 local FakeHumanoid = Instance.new("Humanoid")
@@ -222,7 +222,7 @@ local function CancelScript()  -- : nil
 	end
 end
 
-do -- [[ Scoped Rig Creating. ]]
+do -- [[ Scoped Rig Creating ^w^. ]]
 	local HumanoidDesc = Instance.new("HumanoidDescription")
 	local Animator = Instance.new("Animator")
 	local Animate = Instance.new("LocalScript")
@@ -497,7 +497,7 @@ do -- [[ Scoped Rig Creating. ]]
 end
 
 
--- // RunTime: Functions
+-- // RunTime: Functions UwU
 
 
 local function ExtractNumbers(String) -- <String> : string
@@ -673,6 +673,7 @@ local function GetRandomRadius() -- : Vector3
 	return Vector3.new(math.random(-TeleportOffsetRadius, TeleportOffsetRadius), 0.5, math.random(-TeleportOffsetRadius, TeleportOffsetRadius))
 end
 
+-- Find hot milfs :3
 local function ArePlayersNearby() -- : Boolean
 	local Output = nil
 
@@ -724,7 +725,7 @@ local function BringCharacter() -- : nil
 	end
 end
 
--- // RunTime: Event functions
+-- // RunTime: Event functions x3
 
 local function UpdateCameraCFrame() -- Function | SIGNAL: Camera:GetPropertySignalChanged("CameraSubject")
 	PreviousCameraCFrame = Camera.CFrame
@@ -943,7 +944,7 @@ local function UponCameraChange(NewCamera) -- SIGNAL: Workspace:GetPropertyChang
 	CameraHandle = Camera:GetPropertyChangedSignal("CameraSubject"):Connect(UpdateCameraCFrame)
 end
 
--- // Finalizing: Connecting Events
+-- // Finalizing: Connecting Events òWó
 
 UpdateCameraCFrame()
 SetUpHatConfig()
