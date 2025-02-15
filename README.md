@@ -6,7 +6,7 @@
 > Krypton Reanimate is a utility for Roblox- blablablabalblabalabl https://krypton-reanimate.gitbook.io/krypton-reanimate
 
 ### Purpose
-  - Uses player hats and network ownership manipulation to take advance off the claimed player hats, thus creating a client sided rig to replicate a new character, which allows to run and replicate animation scripts such as Neptunian V or Krystal dance and so on.
+  - Uses player hats and network ownership manipulation to take advance off the claimed player hats, thus creating a client sided rig to replicate a new character, which allows to run and replicate animation scripts such as Lightning Cannon or Star Glitcher and so on. It's meant to be easy to use with it's own api.
 
 ### Examples
   - Moving your parts around, converting filtering disabled scripts to make them replicate, debugging some offsets or animations, and so on.
@@ -54,9 +54,10 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Kryp
 ### Lead Developer
 
 #### @xyzkade 
-  - Leader of the project, wrote the entire code
+  - Leader of the project, wrote the entire code.
 
 ### Contributions:
+  - DoubleRainbowXT (fixed readme and made it go vroom)
 
 #### @blukez
   - Genesis-Alike Flinging mechanism.
