@@ -1,4 +1,5 @@
 # REPO IS GOING THROUGH CHANGES!
+# UPDATED DOC: https://krypton-reanimate.gitbook.io (still unfinished)
 ![repository-open-graph-template(3)](https://github.com/user-attachments/assets/1324e775-2703-4744-861e-ea4ccae934ae)
 
 
