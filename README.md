@@ -1,7 +1,9 @@
 > [!NOTE]
 > A reanimate is a technique uses that manipulates a player's character for custom animations or full-body control. This is typically achieved by creating a client-sided rig and welding unanchored parts that exist on server to the rig’s limbs.
->
-> For more information and documentation, Refeer to: https://krypton-reanimate.gitbook.io
+
+# Official Support
+  - Frequently asked questions and documentation, [Click there](https://krypton-reanimate.gitbook.io)
+  - Discord server, [Click there](https://discord.gg/ArpG4kDvW2)
 
 # Code Module
 ```lua
@@ -64,9 +66,5 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Kryp
 #### @myworldmain
   - Advice for shift lock fix, really appreciate it.
 
-#### @ballsman3761
-  - Critizating my code.
-
-# Official Support
-  - Frequently asked questions and documentation, [Click there](https://github.com/KadeTheExploiter/Krypton/blob/main/Documentation.md)
-  - Discord server, [Click there](https://discord.gg/ArpG4kDvW2)
+#### @empereans
+  - Some fundamental tips.
