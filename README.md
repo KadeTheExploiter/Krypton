@@ -1,11 +1,7 @@
-# REPO IS GOING THROUGH CHANGES!
-# UPDATED DOC: https://krypton-reanimate.gitbook.io (still unfinished)
-![repository-open-graph-template(3)](https://github.com/user-attachments/assets/1324e775-2703-4744-861e-ea4ccae934ae)
-
 > [!NOTE]
 > Krypton Reanimate is a utility for Roblox.
 > In the context of Roblox scripting, reanimation refers to techniques used to manipulate a player's character for custom animations or full-body control. This is typically achieved by creating a client-sided rig and welding unanchored parts that exist on server to the rig’s limbs.
-
+For documentation, Refeer to: https://krypton-reanimate.gitbook.io
 # Code Module
 ```lua
 --[[
