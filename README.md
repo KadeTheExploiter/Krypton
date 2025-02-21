@@ -2,15 +2,9 @@
 # UPDATED DOC: https://krypton-reanimate.gitbook.io (still unfinished)
 ![repository-open-graph-template(3)](https://github.com/user-attachments/assets/1324e775-2703-4744-861e-ea4ccae934ae)
 
-
 > [!NOTE]
-> Krypton Reanimate is a utility for Roblox- blablablabalblabalabl https://krypton-reanimate.gitbook.io/krypton-reanimate
-
-### Purpose
-  - Uses player hats and network ownership manipulation to take advance off the claimed player hats, thus creating a client sided rig to replicate a new character, which allows to run and replicate animation scripts such as Neptunian V or Krystal dance and so on.
-
-### Examples
-  - Moving your parts around, converting filtering disabled scripts to make them replicate, debugging some offsets or animations, and so on.
+> Krypton Reanimate is a utility for Roblox.
+> In the context of Roblox scripting, reanimation refers to techniques used to manipulate a player's character for custom animations or full-body control. This is typically achieved by creating a client-sided rig and welding unanchored parts that exist on server to the rig’s limbs.
 
 # Code Module
 ```lua
@@ -30,21 +24,26 @@
 	https://www.roblox.com/catalog/13421786478/Extra-Torso-Blocky
 ]]
 
-Configuration = {
-	ReturnOnDeath = true,
-	Flinging = true,
-	PresetFling = true, -- if set to false, KadeAPI.CallFling() won't do anything.
-	Animations = true,
-	WaitTime = 0.22,
-	TeleportOffsetRadius = 20,
-	NoCollisions = true,
-	AntiVoiding = true,
-	SetSimulationRadius = true,
-	DisableCharacterScripts = true,
-	AccessoryFallbackDefaults = true,
-	OverlayFakeCharacter = false,
-	
-	Hats = nil, -- Set to nil if you want to use defaults.
+KryptonConfiguration = {
+    ReturnOnDeath = true,
+    Flinging = true,
+    FakeRigScale = 1,
+    SetCharacter = true,
+    PresetFling = true,
+    Animations = true,
+    WaitTime = 0.2501,
+    TeleportOffsetRadius = 20,
+    NoCollisions = true,
+    AntiVoiding = true,
+    SetSimulationRadius = true,
+    DisableCharacterScripts = true,
+    AccessoryFallbackDefaults = true,
+    OverlayFakeCharacter = true,
+    NoBodyNearby = true,
+    LimitHatsPerLimb = true,
+    ShowClientHats = true,
+    RigName = "Tetris",
+    Hats = nil,
 }
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Krypton/main/Module.luau"))()
