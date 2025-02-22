@@ -2,34 +2,12 @@
 -- || GELATEK IS IN FACT THERE. | 1.7 After 5 months..
 -- // Defining Variables: Settings
 
-KryptonConfiguration = {
-	ReturnOnDeath = true,
-	Flinging = true,
-	FakeRigScale = 1,
-	SetCharacter = true,
-	PresetFling = true,
-	Animations = true,
-	WaitTime = 0.2501,
-	TeleportOffsetRadius = 20,
-	NoCollisions = true,
-	AntiVoiding = true,
-	SetSimulationRadius = true,
-	DisableCharacterScripts = true,
-	AccessoryFallbackDefaults = true,
-	OverlayFakeCharacter = true,
-	NoBodyNearby = true,
-	LimitHatsPerLimb = true,
-	ShowClientHats = true,
-	RigName = "Tetris",
-	Hats = nil,
-}
+local Config = KryptonConfiguration or Configuration or {}
 
 local function KryptonInit()
 	if not game.Loaded then
 		game.Loaded:Wait()
 	end 
-
-	local Config = KryptonConfiguration or Configuration or {}
 
 	local WaitTime = Config.WaitTime or 0.25; 
 	local Flinging = Config.Flinging
