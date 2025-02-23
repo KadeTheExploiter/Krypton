@@ -19,7 +19,7 @@ local function KryptonInit()
 	local ShowClientHats = Config.ShowClientHats 
 	local FakeRigScale = Config.FakeRigScale or 1
 	local LimitHatsPerLimb = Config.LimitHatsPerLimb
-	local PresetFling = Flinging and Config.PresetFling 
+	local PresetFling = Config.PresetFling
 	local NoCollisions = Config.NoCollisions or Flinging
 	local SetSimulationRadius = Config.SetSimulationRadius
 	local OverlayFakeCharacter = Config.OverlayFakeCharacter
