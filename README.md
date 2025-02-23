@@ -28,7 +28,6 @@ KryptonConfiguration = {
     Flinging = true,
     FakeRigScale = 1,
     SetCharacter = true,
-    PresetFling = true,
     Animations = true,
     WaitTime = 0.2501,
     TeleportOffsetRadius = 20,
