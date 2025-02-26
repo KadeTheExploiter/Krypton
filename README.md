@@ -1,3 +1,4 @@
+elo
 > [!NOTE]
 > A reanimate is a technique uses that manipulates a player's character for custom animations or full-body control. This is typically achieved by creating a client-sided rig and welding unanchored parts that exist on server to the rig’s limbs.
 
