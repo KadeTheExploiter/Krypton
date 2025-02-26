@@ -4,7 +4,8 @@
 # Official Support
   - Frequently asked questions and documentation, [Click there](https://krypton-reanimate.gitbook.io)
   - Discord server,
- ![Discord Banner 2](https://discord.com/api/guilds/1131676375363879113/widget.png?style=banner2)
+  
+  ![Discord Banner 2](https://discord.com/api/guilds/1131676375363879113/widget.png?style=banner2)
 
 # Code Module
 ```lua
