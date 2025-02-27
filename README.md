@@ -55,7 +55,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Kryp
 
 ### Lead Developer
 
-#### @xyzkade 
+#### [xyzkade](https://github.com/KadeTheExploiter) 
   > Leader of the project, wrote the entire code
 
 ### Contributions:
