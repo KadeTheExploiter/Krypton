@@ -60,7 +60,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Kryp
 
 ### Contributions:
 
-#### @blukez
+#### [@blukez](https://github.com/Blukezz/)
   > Genesis-Alike Flinging mechanism.
 
 #### @deuces1961
