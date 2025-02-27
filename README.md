@@ -55,7 +55,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Kryp
 
 ### Lead Developer
 
-#### [xyzkade](https://github.com/KadeTheExploiter) 
+#### [@xyzkade](https://github.com/KadeTheExploiter) 
   > Leader of the project, wrote the entire code
 
 ### Contributions:
@@ -69,5 +69,5 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Kryp
 #### @myworldmain
   > Advice for shift lock fix, really appreciate it.
 
-#### @empereans
+#### [@empereans](https://github.com/Empereans)
   > Some fundamental tips.
