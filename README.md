@@ -1,9 +1,13 @@
+[![Anurag's GitHub stats](https://github-readme-stats.vercel.app/api?username=KadeTheExploiter&theme=catppuccin_latte)](https://github.com/anuraghazra/github-readme-stats)
+
 > [!NOTE]
 > A reanimate is a technique uses that manipulates a player's character for custom animations or full-body control. This is typically achieved by creating a client-sided rig and welding unanchored parts that exist on server to the rig’s limbs.
 
 # Official Support
   - Frequently asked questions and documentation, [Click there](https://krypton-reanimate.gitbook.io)
-  - Discord server, [Click there](https://discord.gg/ArpG4kDvW2)
+  - Discord server
+  
+    ![Discord Banner 2](https://discord.com/api/guilds/1131676375363879113/widget.png?style=banner2)
 
 # Code Module
 ```lua
@@ -51,19 +55,19 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Kryp
 
 ### Lead Developer
 
-#### @xyzkade 
-  - Leader of the project, wrote the entire code
+#### [@xyzkade](https://github.com/KadeTheExploiter) 
+  > Leader of the project, wrote the entire code
 
 ### Contributions:
 
-#### @blukez
-  - Genesis-Alike Flinging mechanism.
+#### [@blukez](https://github.com/Blukezz/)
+  > Genesis-Alike Flinging mechanism.
 
 #### @deuces1961
-  - Convinced me to stop relying on Lua optimizations, such as defining variables as they don't make any difference on LuaU VMs, some in general optimization tricks as well.
+  > Convinced me to stop relying on Lua optimizations, such as defining variables as they don't make any difference on LuaU VMs, some in general optimization tricks as well.
 
 #### @myworldmain
-  - Advice for shift lock fix, really appreciate it.
+  > Advice for shift lock fix, really appreciate it.
 
-#### @empereans
-  - Some fundamental tips.
+#### [@empereans](https://github.com/Empereans)
+  > Some fundamental tips.
