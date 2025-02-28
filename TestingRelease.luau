@@ -908,9 +908,11 @@ local function KryptonInit() -- [ Setup, following the emper's way because peopl
 		Camera = NewCamera
 		CameraHandle = Camera:GetPropertyChangedSignal("CameraSubject"):Connect(UpdateCameraCFrame)
 	end
-	
+
+        spawn(function()
 	UpdateCameraCFrame()
 	SetUpHatConfig()
+        end)
 
 	ForceSetProperty(FindFirstChild(FakeRoot, "Died"), "Volume", 0)
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
