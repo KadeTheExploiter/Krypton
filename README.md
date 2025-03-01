@@ -69,5 +69,5 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Kryp
 #### @myworldmain
   > Advice for shift lock fix, really appreciate it.
 
-#### [@empereans](https://github.com/Empereans)
+#### [@empereans](https://discordlookup.com/user/1330293219153416242)
   > Some fundamental tips.
