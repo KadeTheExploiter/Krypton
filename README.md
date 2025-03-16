@@ -28,24 +28,27 @@
 ]]
 
 KryptonConfiguration = {
-    ReturnOnDeath = true,
-    Flinging = true,
-    FakeRigScale = 1,
-    SetCharacter = true,
-    Animations = true,
-    WaitTime = 0.2501,
-    TeleportOffsetRadius = 20,
-    NoCollisions = true,
-    AntiVoiding = true,
-    SetSimulationRadius = true,
-    DisableCharacterScripts = true,
-    AccessoryFallbackDefaults = true,
-    OverlayFakeCharacter = true,
-    NoBodyNearby = true,
-    LimitHatsPerLimb = true,
-    ShowClientHats = true,
-    RigName = "Tetris",
-    Hats = nil,
+	ReturnOnDeath = false,
+	Flinging = true,
+	FakeRigScale = 1,
+	SetCharacter = false,
+	Animations = true,
+	WaitTime = 0.257,
+	
+	TeleportOffsetRadius = 20,
+	NoCollisions = true,
+	AntiVoiding = true,
+	SetSimulationRadius = true,
+	DisableCharacterScripts = true,
+	AccessoryFallbackDefaults = true,
+	OverlayFakeCharacter = true,
+	
+	RigName = "Tetris",
+	Hats = nil,
+	
+	LimitHatsPerLimb = false,
+	NoBodyNearby = true,
+	PermanentDeath = false
 }
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Krypton/main/Module.luau"))()
