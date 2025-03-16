@@ -2,7 +2,7 @@
 -- || 1.7.1 Jeez, I didn't know it was THAT BAD.
 -- // kitty kitty rawr
 
-local KryptonSetConfig = KryptonConfiguration or {}
+local KryptonSetConfig = KryptonConfiguration or Configuration or {}
 local RigName = KryptonSetConfig.RigName or "Evolution, it must've passed you by."
 local WaitTime = KryptonSetConfig.WaitTime or 0.251
 local TeleportOffsetRadius = KryptonSetConfig.TeleportOffsetRadius or 21
