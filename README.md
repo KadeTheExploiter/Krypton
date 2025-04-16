@@ -1,4 +1,3 @@
-[![Anurag's GitHub stats](https://github-readme-stats.vercel.app/api?username=KadeTheExploiter&theme=catppuccin_latte)](https://github.com/anuraghazra/github-readme-stats)
 
 > [!NOTE]
 > A reanimate is a technique uses that manipulates a player's character for custom animations or full-body control. This is typically achieved by creating a client-sided rig and welding unanchored parts that exist on server to the rig’s limbs.
