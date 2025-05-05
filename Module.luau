@@ -1255,7 +1255,7 @@ return {
 				end
 			end
 
-			local Success, AnimationModel = pcall(InsertService.Insert, InsertService, "LoadLocalAsset", "rbxassetid://" .. tostring(AnimationID))
+			local Success, AnimationModel =  pcall(InsertService.LoadLocalAsset, InsertService, "rbxassetid://" .. tostring(4812941481))
 
 			if not Success then
 				warn("Failed to load animation.")
