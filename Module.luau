@@ -46,20 +46,6 @@ local LimitHatsPerLimb = KryptonSetConfig.LimitHatsPerLimb
 local DisableCharacterScripts = KryptonSetConfig.DisableCharacterScripts
 local Hats = KryptonSetConfig.Hats or {}
 
-if not PermanentDeath and KryptonSetConfig.Refit then
-	warn("Refit is unnecessary without permanent death. Setting Refit to false.")
-	Refit = nil
-end
-
-if not Reclaim and KryptonSetConfig.Reclaim then
-	warn("Reclaim is set to true, but NoBodyNearby and PermanentDeath are set to false. Reclaim will not work.")
-end
-
-if not NoBodyNearby and FlingMethod == ("Hat" or "HatTouch") then
-	warn(`NoBodyNearby is required for Flinging using {FlingMethod}, but is disabled, turning off.`)
-	Flinging = nil
-end
-
 local GetPropertyChangedSignal = game.GetPropertyChangedSignal
 local FindFirstChildWhichIsA = game.FindFirstChildWhichIsA
 local FindFirstChildOfClass = game.FindFirstChildOfClass
@@ -552,11 +538,11 @@ local function CheckAge(Part: Instance): boolean
 end
 
 local function GetAdjustedAxis(Y: number): number
-	if Y > 28 then
+	if Y > 27 then
 		return Y
 	end
 
-	return 28
+	return 27
 end
 
 local function GetCurrentPrimaryPart()
@@ -787,6 +773,49 @@ local function OnCharacterAdded(NewCharacter: Model)
 end
 
 local function StartReanimate()
+	-- This will get rewritten later, cbb rn.
+	KryptonSetConfig = KryptonConfiguration or Configuration or {}
+	FlingTable = KryptonSetConfig.Flinging or {}
+	RigName = KryptonSetConfig.RigName or "Evolution, it must've passed you by."
+	WaitTime = KryptonSetConfig.WaitTime or 0.251
+	RigScale = KryptonSetConfig.FakeRigScale or 1
+	DestroyHeightOffset = KryptonSetConfig['DestroyHeightOffset'] or 100
+	RadiusOffset = KryptonSetConfig.TeleportOffsetRadius or 21
+	Flinging = FlingTable.Flinging
+	FlingMethod = FlingTable.MethodUsed or "Hat"
+	FlingVelocity = FlingTable.Velocity or 8000
+	NoBodyNearby = KryptonSetConfig.NoBodyNearby
+	PermanentDeath = KryptonSetConfig.PermanentDeath
+	if not replicatesignal and KryptonSetConfig.PermanentDeath then
+		warn("ReplicateSignal not present in environment. PermanentDeath will not work.")
+		PermanentDeath = nil
+	end
+
+	Reclaim = NoBodyNearby and PermanentDeath and KryptonSetConfig.Reclaim
+	Refit = KryptonSetConfig.Refit
+	DontStartYet = KryptonSetConfig.DontStartYet
+	RefitCount = KryptonSetConfig.RefitHatCount or 2
+	AntiVoiding = KryptonSetConfig.AntiVoiding
+	NoCollisions = KryptonSetConfig.NoCollisions or Flinging 
+	SetPlayerChar = KryptonSetConfig.SetCharacter
+	ToolFlinging = KryptonSetConfig.ToolFlinging 
+	LimitHatsPerLimb = KryptonSetConfig.LimitHatsPerLimb 
+	DisableCharacterScripts = KryptonSetConfig.DisableCharacterScripts
+	
+	if not PermanentDeath and KryptonSetConfig.Refit then
+		warn("Refit is unnecessary without permanent death. Setting Refit to false.")
+		Refit = nil
+	end
+	
+	if not Reclaim and KryptonSetConfig.Reclaim then
+		warn("Reclaim is set to true, but NoBodyNearby and PermanentDeath are set to false. Reclaim will not work.")
+	end
+	
+	if not NoBodyNearby and FlingMethod == ("Hat" or "HatTouch") then
+		warn(`NoBodyNearby is required for Flinging using {FlingMethod}, but is disabled, turning off.`)
+		Flinging = nil
+	end
+	
     Character = Player['Character'] or SignalWait(Player['CharacterAdded'])
     
     if Character.Name ~= Player.Name then
