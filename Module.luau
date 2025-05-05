@@ -552,11 +552,11 @@ local function CheckAge(Part: Instance): boolean
 end
 
 local function GetAdjustedAxis(Y: number): number
-	if Y > 27 then
+	if Y > 28 then
 		return Y
 	end
 
-	return 27
+	return 28
 end
 
 local function GetCurrentPrimaryPart()
