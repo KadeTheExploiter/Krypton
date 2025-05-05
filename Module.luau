@@ -624,15 +624,15 @@ end
 
 local function CancelScript()
 	if not IsDescendantOf(FakeRig, Workspace) then
-        return
-    end
+		return
+	end
 
 	local RootCFrame = FakeRoot.CFrame
 
 	ReplicateSignal(Player, "ConnectDiedSignalBackend")
 	ChangeState(FakeHumanoid, Enum.HumanoidStateType.Dead)
 	Disconnect(PreSimulationEvent)
-    SignalWait(Player.CharacterAdded)
+	SignalWait(Player.CharacterAdded)
 	Character = Player.Character
 
  	-- memory free up real fe bypass
@@ -830,7 +830,7 @@ local function StartReanimate()
 	Hats = ValidateSetting("Hats", {})
 	
 	FallenPartsDestroyHeightOffset = FallenPartsDestroyHeight + DestroyHeightOffset or 100
-    Character = Player['Character'] or SignalWait(Player['CharacterAdded'])
+	Character = Player['Character'] or SignalWait(Player['CharacterAdded'])
 
 	if not PermanentDeath and ReanimateConfig.Refit then
 		Refit = nil
@@ -840,7 +840,7 @@ local function StartReanimate()
 		Flinging = nil
 	end
 	
-    if Character.Name ~= Player.Name then 
+	if Character.Name ~= Player.Name then 
 		return 
 	end
 
@@ -1279,6 +1279,9 @@ return {
 				while true do
 					for i, Time in FrameTimes do
 						if not IsDescendantOf(FakeRig, Workspace) then
+							table.clear(FrameTimes)
+							table.clear(FrameData)
+
 							break 
 						end
 
