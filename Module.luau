@@ -19,6 +19,7 @@ local RigName = KryptonSetConfig.RigName or "Evolution, it must've passed you by
 local WaitTime = KryptonSetConfig.WaitTime or 0.251
 local RigScale = KryptonSetConfig.FakeRigScale or 1
 
+
 local RadiusOffset = KryptonSetConfig.TeleportOffsetRadius or 21
 
 local Flinging = FlingTable.Flinging
@@ -35,6 +36,7 @@ end
 
 local Reclaim = NoBodyNearby and PermanentDeath and KryptonSetConfig.Reclaim
 local Refit = KryptonSetConfig.Refit
+local DontStartYet = KryptonSetConfig.DontStartYet
 local RefitCount = KryptonSetConfig.RefitHatCount or 2
 local AntiVoiding = KryptonSetConfig.AntiVoiding
 local NoCollisions = KryptonSetConfig.NoCollisions or Flinging 
@@ -363,6 +365,13 @@ local function FinalizeAccoutrements()
 			end)
 		end
 	end
+end
+
+local function RefitRig()
+    TotalHats = 0
+    SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", 0.5, true)
+    SetDescendantProperties(FakeRigChildren, "BasePart", "BrickColor", BrickColor.new("Forest green"), true)
+    ReplicateSignal(Player, "ConnectDiedSignalBackend")
 end
 
 -- // Camera
@@ -729,10 +738,7 @@ local function OnPostSimulation()
 		end
 	
 		if TotalHats > RefitCount and #Blacklist < TotalHats - RefitCount  then
-			TotalHats = 0
-			SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", 0.5, true)
-			SetDescendantProperties(FakeRigChildren, "BasePart", "BrickColor", BrickColor.new("Forest green"), true)
-			ReplicateSignal(Player, "ConnectDiedSignalBackend")
+            RefitRig()
 		end
 	end
 end
@@ -789,212 +795,218 @@ local function OnCharacterAdded(NewCharacter: Model)
 	SetDescendantProperties(FakeRigChildren, "BasePart", "BrickColor", BrickColor.new("Black"), true)
 end
 
-local Terrain = WaitForInstance(Workspace, "Terrain", "Terrain")
-Humanoid = WaitForInstance(Character, "Humanoid", nil)
-RootPart = WaitForInstance(Character, "Part", "HumanoidRootPart")
-Animator = WaitForInstance(Humanoid, "Animator", nil)
-CFrameBackup = RootPart.CFrame
-FakeRig.Parent = Terrain
-FakeRoot.CFrame = CFrameBackup
-Player.ReplicationFocus = FakeRoot
+local function StartReanimate()
+    local Terrain = WaitForInstance(Workspace, "Terrain", "Terrain")
+    Humanoid = WaitForInstance(Character, "Humanoid", nil)
+    RootPart = WaitForInstance(Character, "Part", "HumanoidRootPart")
+    Animator = WaitForInstance(Humanoid, "Animator", nil)
+    CFrameBackup = RootPart.CFrame
+    FakeRig.Parent = Terrain
+    FakeRoot.CFrame = CFrameBackup
+    Player.ReplicationFocus = FakeRoot
 
-FakeRigChildren = GetChildren(FakeRig)
-PreSimulationEvent = SignalConnect(RunService["PreSimulation"], OnPreSimulation) -- need to define ts
-TableInsert(RBXSignals, SignalConnect(GetPropertyChangedSignal(FakeRig, "Parent"), OnParentChange))
-TableInsert(RBXSignals, SignalConnect(GetPropertyChangedSignal(Camera, "CameraSubject"), ChangeCameraSubject))
-TableInsert(RBXSignals, SignalConnect(Player["CharacterAdded"], OnCharacterAdded))
-TableInsert(RBXSignals, SignalConnect(RunService["PostSimulation"], OnPostSimulation))
-TableInsert(RBXSignals, SignalConnect(RunService["PreRender"], OnPreRender))
-TableInsert(RBXSignals, SignalConnect(BindableEvent["Event"], CancelScript))
-TableInsert(RBXSignals, PreSimulationEvent)
+    FakeRigChildren = GetChildren(FakeRig)
+    PreSimulationEvent = SignalConnect(RunService["PreSimulation"], OnPreSimulation) -- need to define ts
+    TableInsert(RBXSignals, SignalConnect(GetPropertyChangedSignal(FakeRig, "Parent"), OnParentChange))
+    TableInsert(RBXSignals, SignalConnect(GetPropertyChangedSignal(Camera, "CameraSubject"), ChangeCameraSubject))
+    TableInsert(RBXSignals, SignalConnect(Player["CharacterAdded"], OnCharacterAdded))
+    TableInsert(RBXSignals, SignalConnect(RunService["PostSimulation"], OnPostSimulation))
+    TableInsert(RBXSignals, SignalConnect(RunService["PreRender"], OnPreRender))
+    TableInsert(RBXSignals, SignalConnect(BindableEvent["Event"], CancelScript))
+    TableInsert(RBXSignals, PreSimulationEvent)
 
-for _, Track in next, GetPlayingAnimationTracks(Animator) do
-	StopTrack = Track['Stop']
-	PlayTrack = Track['Play']
-	AdjustSpeed = Track['AdjustSpeed']
-	break
+    for _, Track in next, GetPlayingAnimationTracks(Animator) do
+        StopTrack = Track['Stop']
+        PlayTrack = Track['Play']
+        AdjustSpeed = Track['AdjustSpeed']
+        break
+    end
+
+    if WaitTime < 0.16 then
+        WaitTime = 0
+    end
+
+    if RigName then
+        FakeRig.Name = RigName	
+    end
+
+    if RigScale then
+        FakeRoot.CFrame = FakeRoot.CFrame * CFrameNew(0, 2 * RigScale, 0)
+        FakeRig:ScaleTo(RigScale)
+    end
+
+    if PermanentDeath then
+        SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", 0.5, true)
+        ReplicateSignal(Player, "ConnectDiedSignalBackend")
+        TaskWait(Players.RespawnTime + 0.15)
+
+        BringCharacter()
+    end
+
+    if KryptonSetConfig.Animations then
+        local Animate = Instance.new("LocalScript")
+        Animate.Name = "Animate"
+        Animate.Parent = FakeRig
+
+        local function AddAnimation(ID)
+            local Animation = Instance.new("Animation")
+            Animation.AnimationId = ID
+            return Animation
+        end
+
+        local AnimationsToggled = true
+        local JumpAnimTime = 0
+
+        local Current = {
+            Speed = 0,
+            Animation = "",
+            Instance = nil,
+            AnimTrack = nil,
+            KeyframeHandler = nil,
+        }
+
+        local AnimationTable = {
+            Idle = AddAnimation("http://www.roblox.com/asset/?id=180435571"),
+            Walk = AddAnimation("http://www.roblox.com/asset/?id=180426354"),
+            Run = AddAnimation("Run.xml"),
+            Jump = AddAnimation("http://www.roblox.com/asset/?id=125750702"),
+            Fall = AddAnimation("http://www.roblox.com/asset/?id=180436148"),
+            Climb = AddAnimation("http://www.roblox.com/asset/?id=180436334"),
+            Sit = AddAnimation("http://www.roblox.com/asset/?id=178130996"),
+
+            dance1 = AddAnimation("http://www.roblox.com/asset/?id=182435998"),
+            dance2 = AddAnimation("http://www.roblox.com/asset/?id=182436842"),
+            dance3 = AddAnimation("http://www.roblox.com/asset/?id=182436935"),
+            wave = AddAnimation("http://www.roblox.com/asset/?id=128777973"),
+            point = AddAnimation("http://www.roblox.com/asset/?dan=128853357"),
+            laugh = AddAnimation("http://www.roblox.com/asset/?id=129423131"),
+            cheer = AddAnimation("http://www.roblox.com/asset/?id=129423030"),
+        }
+
+        local function PlayAnimation(AnimName, TransitionTime, Looped)
+            local Anim = AnimationTable[AnimName]
+
+            if Anim == Current.Instance then
+                return
+            end
+
+            if Current.AnimTrack then
+                StopTrack(Current.AnimTrack, TransitionTime)
+                Destroy(Current.AnimTrack)
+            end
+
+            if Current.KeyframeHandler then
+                Disconnect(Current.KeyframeHandler)
+            end
+
+            Current.Speed = 1.0
+            Current.AnimTrack = LoadAnimation(FakeAnimator, Anim)
+            Current.AnimTrack.Priority = Enum.AnimationPriority.Core
+            PlayTrack(Current.AnimTrack, TransitionTime)
+
+            Current.Animation = AnimName
+            Current.Instance = Anim
+
+            Current.KeyframeHandler = SignalConnect(Current.AnimTrack.KeyframeReached, function(FrameName)
+                if Looped then
+                    PlayAnimation(AnimName, 0.1, true)
+
+                elseif FrameName == "End" and AnimationTable[Current.Animation] then
+                    PlayAnimation("Idle", 0.1)
+                end
+            end)
+        end
+
+        local function SetAnimationSpeed(Speed)
+            Current.Speed = Speed
+            AdjustSpeed(Current.AnimTrack, Speed)
+        end
+
+        local EventHandlers = {
+            Running = function(Speed)
+                if Speed > 0.01 then
+                    PlayAnimation("Walk", 0.1)
+                    SetAnimationSpeed(Speed / 14.5)
+                else
+                    PlayAnimation("Idle", 0.1)
+                end
+            end,
+
+            Jumping = function()
+                PlayAnimation("Jump", 0.1)
+                JumpAnimTime = 0.3
+            end,
+
+            Climbing = function(Speed)
+                PlayAnimation("Climb", 0.1)
+                SetAnimationSpeed(Speed / 12.0)
+            end,
+
+            FreeFalling = function()
+                if JumpAnimTime <= 0 then
+                    PlayAnimation("Fall", 0.3)
+                end
+            end,
+        }
+
+        for EventName, Handler in EventHandlers do
+            SignalConnect(FakeHumanoid[EventName], function(...)
+                if AnimationsToggled then
+                    Handler(...)
+                end
+            end)
+        end
+
+        table.insert(RBXSignals, SignalConnect(Player.Chatted, function(Message)
+            local Context = Message and string.gsub(Message, "/e ", "")
+
+            if AnimationsToggled and AnimationTable[Context] then
+                PlayAnimation(Context, 0.1, true)
+            end
+        end))
+
+        table.insert(RBXSignals, SignalConnect(RunService.PostSimulation, function(DeltaTime)
+            AnimationsToggled = Animate and Animate.Parent and Animate.Enabled
+            JumpAnimTime = math.max(0, JumpAnimTime - DeltaTime)
+        end))
+    end
+
+    if KryptonSetConfig.AccessoryFallbackDefaults then
+        local Types = { Name = "string", Texture = "string", Mesh = "string", Offset = "CFrame" }
+
+        for Name, Data in {} do
+            local HatsData = Hats[Name]
+            local Flagged = nil
+
+            if HatsData and typeof(HatsData) == "table" then
+                for _, Hat in HatsData do
+                    for Key, Type in Types do
+                        if typeof(Hat[Key]) ~= Type then
+                            Flagged = true
+                            break
+                        end
+                    end
+                end
+            else
+                Flagged = true
+            end
+
+            if Flagged then
+                Hats[Name] = table.clone(Data)
+            end
+        end
+    end
+
+    SetDescendantProperties(FakeRigChildren, "Decal", "Transparency", KryptonSetConfig.OverlayFakeCharacter and 0.5 or 1, true)
+    SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", KryptonSetConfig.OverlayFakeCharacter and 0.5 or 1, true)
+    SetHumanoidStates()
+    FinalizeAccoutrements()
+    ApplyCharacter()
 end
 
-if WaitTime < 0.16 then
-	WaitTime = 0
-end
-
-if RigName then
-	FakeRig.Name = RigName	
-end
-
-if RigScale then
-	FakeRoot.CFrame = FakeRoot.CFrame * CFrameNew(0, 2 * RigScale, 0)
-	FakeRig:ScaleTo(RigScale)
-end
-
-if PermanentDeath then
-	SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", 0.5, true)
-	ReplicateSignal(Player, "ConnectDiedSignalBackend")
-	TaskWait(Players.RespawnTime + 0.15)
-
-	BringCharacter()
-end
-
-if KryptonSetConfig.Animations then
-	local Animate = Instance.new("LocalScript")
-	Animate.Name = "Animate"
-	Animate.Parent = FakeRig
-
-	local function AddAnimation(ID)
-		local Animation = Instance.new("Animation")
-		Animation.AnimationId = ID
-		return Animation
-	end
-
-	local AnimationsToggled = true
-	local JumpAnimTime = 0
-
-	local Current = {
-		Speed = 0,
-		Animation = "",
-		Instance = nil,
-		AnimTrack = nil,
-		KeyframeHandler = nil,
-	}
-
-	local AnimationTable = {
-		Idle = AddAnimation("http://www.roblox.com/asset/?id=180435571"),
-		Walk = AddAnimation("http://www.roblox.com/asset/?id=180426354"),
-		Run = AddAnimation("Run.xml"),
-		Jump = AddAnimation("http://www.roblox.com/asset/?id=125750702"),
-		Fall = AddAnimation("http://www.roblox.com/asset/?id=180436148"),
-		Climb = AddAnimation("http://www.roblox.com/asset/?id=180436334"),
-		Sit = AddAnimation("http://www.roblox.com/asset/?id=178130996"),
-
-		dance1 = AddAnimation("http://www.roblox.com/asset/?id=182435998"),
-		dance2 = AddAnimation("http://www.roblox.com/asset/?id=182436842"),
-		dance3 = AddAnimation("http://www.roblox.com/asset/?id=182436935"),
-		wave = AddAnimation("http://www.roblox.com/asset/?id=128777973"),
-		point = AddAnimation("http://www.roblox.com/asset/?dan=128853357"),
-		laugh = AddAnimation("http://www.roblox.com/asset/?id=129423131"),
-		cheer = AddAnimation("http://www.roblox.com/asset/?id=129423030"),
-	}
-
-	local function PlayAnimation(AnimName, TransitionTime, Looped)
-		local Anim = AnimationTable[AnimName]
-
-		if Anim == Current.Instance then
-			return
-		end
-
-		if Current.AnimTrack then
-			StopTrack(Current.AnimTrack, TransitionTime)
-			Destroy(Current.AnimTrack)
-		end
-
-		if Current.KeyframeHandler then
-			Disconnect(Current.KeyframeHandler)
-		end
-
-		Current.Speed = 1.0
-		Current.AnimTrack = LoadAnimation(FakeAnimator, Anim)
-		Current.AnimTrack.Priority = Enum.AnimationPriority.Core
-		PlayTrack(Current.AnimTrack, TransitionTime)
-
-		Current.Animation = AnimName
-		Current.Instance = Anim
-
-		Current.KeyframeHandler = SignalConnect(Current.AnimTrack.KeyframeReached, function(FrameName)
-			if Looped then
-				PlayAnimation(AnimName, 0.1, true)
-
-			elseif FrameName == "End" and AnimationTable[Current.Animation] then
-				PlayAnimation("Idle", 0.1)
-			end
-		end)
-	end
-
-	local function SetAnimationSpeed(Speed)
-		Current.Speed = Speed
-		AdjustSpeed(Current.AnimTrack, Speed)
-	end
-
-	local EventHandlers = {
-		Running = function(Speed)
-			if Speed > 0.01 then
-				PlayAnimation("Walk", 0.1)
-				SetAnimationSpeed(Speed / 14.5)
-			else
-				PlayAnimation("Idle", 0.1)
-			end
-		end,
-
-		Jumping = function()
-			PlayAnimation("Jump", 0.1)
-			JumpAnimTime = 0.3
-		end,
-
-		Climbing = function(Speed)
-			PlayAnimation("Climb", 0.1)
-			SetAnimationSpeed(Speed / 12.0)
-		end,
-
-		FreeFalling = function()
-			if JumpAnimTime <= 0 then
-				PlayAnimation("Fall", 0.3)
-			end
-		end,
-	}
-
-	for EventName, Handler in EventHandlers do
-		SignalConnect(FakeHumanoid[EventName], function(...)
-			if AnimationsToggled then
-				Handler(...)
-			end
-		end)
-	end
-
-	table.insert(RBXSignals, SignalConnect(Player.Chatted, function(Message)
-		local Context = Message and string.gsub(Message, "/e ", "")
-
-		if AnimationsToggled and AnimationTable[Context] then
-			PlayAnimation(Context, 0.1, true)
-		end
-	end))
-
-	table.insert(RBXSignals, SignalConnect(RunService.PostSimulation, function(DeltaTime)
-		AnimationsToggled = Animate and Animate.Parent and Animate.Enabled
-		JumpAnimTime = math.max(0, JumpAnimTime - DeltaTime)
-	end))
-end
-
-if KryptonSetConfig.AccessoryFallbackDefaults then
-	local Types = { Name = "string", Texture = "string", Mesh = "string", Offset = "CFrame" }
-
-	for Name, Data in {} do
-		local HatsData = Hats[Name]
-		local Flagged = nil
-
-		if HatsData and typeof(HatsData) == "table" then
-			for _, Hat in HatsData do
-				for Key, Type in Types do
-					if typeof(Hat[Key]) ~= Type then
-						Flagged = true
-						break
-					end
-				end
-			end
-		else
-			Flagged = true
-		end
-
-		if Flagged then
-			Hats[Name] = table.clone(Data)
-		end
-	end
-end
-
-SetDescendantProperties(FakeRigChildren, "Decal", "Transparency", KryptonSetConfig.OverlayFakeCharacter and 0.5 or 1, true)
-SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", KryptonSetConfig.OverlayFakeCharacter and 0.5 or 1, true)
-SetHumanoidStates()
-FinalizeAccoutrements()
-ApplyCharacter()
+if not DontStartYet then
+    StartReanimate()
+end 
 
 return {
 	GetCharacter = function() -- Returns FakeRig Model, needed for scripts.
@@ -1154,4 +1166,8 @@ return {
 			return GetFirstWeld(Object)
 		end
 	end,
+
+    StartReanimate = StartReanimate,
+    InstantRefit = RefitRig,
+    StopReanimate = CancelScript
 }
