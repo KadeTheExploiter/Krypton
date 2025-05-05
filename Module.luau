@@ -655,13 +655,14 @@ local function CancelScript()
 	ReplicateSignal(Player, "ConnectDiedSignalBackend")
 	ChangeState(FakeHumanoid, Enum.HumanoidStateType.Dead)
 	Disconnect(PreSimulationEvent)
-	Character = SignalWait(Player.CharacterAdded)
+    SignalWait(Player.CharacterAdded)
+	Character = Player.Character
 
  	-- memory free up real fe bypass
 
 	for Key, Signal in RBXSignals do
 		Disconnect(Signal)
-        RBXSignals[Key] = nil
+		RBXSignals[Key] = nil
 	end
 
 	for _, Table in Tables do
