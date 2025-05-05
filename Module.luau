@@ -1323,6 +1323,12 @@ return {
 			for Name, Joint in Joints do
 				Joint.Transform = JointsOffsets[Name]
 			end
+
+			local Animate = FindFirstChild(FakeRig, "Animate")
+
+			if Animate then
+				Animate.Enabled = Animations
+			end
 		end
 	},
 
