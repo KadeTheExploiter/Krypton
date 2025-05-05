@@ -1204,6 +1204,9 @@ return {
 		end
 	end,
 
+	ReanimateVersion = function()
+		return "1.8-beta"
+	end
 	StartReanimate = StartReanimate,
 	InstantRefit = RefitRig,
 	StopReanimate = CancelScript
