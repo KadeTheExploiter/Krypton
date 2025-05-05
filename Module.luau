@@ -659,17 +659,15 @@ local function CancelScript()
 
  	-- memory free up real fe bypass
 
-	for _, Signal in RBXSignals do
+	for Key, Signal in RBXSignals do
 		Disconnect(Signal)
+        RBXSignals[Key] = nil
 	end
 
-	for Key, Table in Tables do
+	for _, Table in Tables do
 		TableClear(Table)
-		Table[Key] = nil
 	end
 	
-	Tables = nil
-
 	Camera.CameraSubject = Character
 
 	SetCore(StarterGui, "ResetButtonCallback", true)
