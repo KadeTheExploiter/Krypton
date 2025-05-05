@@ -36,7 +36,7 @@ end
 
 local Reclaim = NoBodyNearby and PermanentDeath and KryptonSetConfig.Reclaim
 local Refit = KryptonSetConfig.Refit
-local DontStartYet = KryptonSetConfig.DontStartYet or true
+local DontStartYet = KryptonSetConfig.DontStartYet
 local RefitCount = KryptonSetConfig.RefitHatCount or 2
 local AntiVoiding = KryptonSetConfig.AntiVoiding
 local NoCollisions = KryptonSetConfig.NoCollisions or Flinging 
