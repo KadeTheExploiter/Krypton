@@ -12,39 +12,10 @@ local Sine = math.sin
 local Cosine = math.cos
 local ClockTPOT = os.clock
 
-local KryptonSetConfig = KryptonConfiguration or Configuration or {}
-local FlingTable = KryptonSetConfig.Flinging or {}
+local Hats = {}
 
-local RigName = KryptonSetConfig.RigName or "Evolution, it must've passed you by."
-local WaitTime = KryptonSetConfig.WaitTime or 0.251
-local RigScale = KryptonSetConfig.FakeRigScale or 1
-local DestroyHeightOffset = KryptonSetConfig['DestroyHeightOffset'] or 100
-
-local RadiusOffset = KryptonSetConfig.TeleportOffsetRadius or 21
-
-local Flinging = FlingTable.Flinging
-local FlingMethod = FlingTable.MethodUsed or "Hat"
-local FlingVelocity = FlingTable.Velocity or 8000
-
-local NoBodyNearby = KryptonSetConfig.NoBodyNearby
-local PermanentDeath = KryptonSetConfig.PermanentDeath
-
-if not replicatesignal and KryptonSetConfig.PermanentDeath then
-	warn("ReplicateSignal not present in environment. PermanentDeath will not work.")
-	PermanentDeath = nil
-end
-
-local Reclaim = NoBodyNearby and PermanentDeath and KryptonSetConfig.Reclaim
-local Refit = KryptonSetConfig.Refit
-local DontStartYet = KryptonSetConfig.DontStartYet
-local RefitCount = KryptonSetConfig.RefitHatCount or 2
-local AntiVoiding = KryptonSetConfig.AntiVoiding
-local NoCollisions = KryptonSetConfig.NoCollisions or Flinging 
-local SetPlayerChar = KryptonSetConfig.SetCharacter
-local ToolFlinging = KryptonSetConfig.ToolFlinging 
-local LimitHatsPerLimb = KryptonSetConfig.LimitHatsPerLimb 
-local DisableCharacterScripts = KryptonSetConfig.DisableCharacterScripts
-local Hats = KryptonSetConfig.Hats or {}
+local FlingTable, ReturnOnDeath, RigName, WaitTime, RigScale, DestroyHeightOffset, RadiusOffset, FlingMethod, FlingVelocity, RefitCount
+local Flinging, OverlayFakeCharacter, NoBodyNearby, PermanentDeath, Reclaim, Refit, DontStartYet, AntiVoiding, NoCollisions, SetPlayerChar, ToolFlinging, LimitHatsPerLimb, DisableCharacterScripts
 
 local GetPropertyChangedSignal = game.GetPropertyChangedSignal
 local FindFirstChildWhichIsA = game.FindFirstChildWhichIsA
@@ -70,6 +41,8 @@ local FlingInstance = nil
 local PlayTrack = nil
 local StopTrack = nil
 local AdjustSpeed = nil
+local CurrentAnimation = nil
+local AnimationThread = nil
 
 local MaxInteger = 2147483646
 local SinedClock = 1
@@ -99,7 +72,10 @@ local TempSignals = CreateTable()
 local RBXSignals = CreateTable()
 local Blacklist = CreateTable()
 local HatsInUse = CreateTable()
+local JointsOffsets  = CreateTable()
+local Joints = CreateTable()
 
+local InsertService: InsertService = FindFirstChildOfClass(game, "InsertService")
 local Workspace: Workspace = FindFirstChildOfClass(game, "Workspace")
 local Players: Players = FindFirstChildOfClass(game, "Players")
 local RunService: RunService = FindFirstChildOfClass(game, "RunService")
@@ -109,11 +85,13 @@ local UserInputService: UserInputService = FindFirstChildOfClass(game, "UserInpu
 local SignalConnect = Close['Connect']
 local SignalWait = Close['Wait']
 local SignalOnce = Close['Once']
-
 local Disconnect = SignalOnce(Close, function() end)['Disconnect']
+
+local CanInsertModels, _ = pcall(InsertService, "LoadLocalAsset", "rbxassetid://1")
 local CanChangeSimRadius, _ = pcall(GetPropertyChangedSignal, Players.LocalPlayer, "SimulationRadius")
 local FallenPartsDestroyHeight = Workspace['FallenPartsDestroyHeight'] 
-local FallenPartsDestroyHeightOffset = FallenPartsDestroyHeight + DestroyHeightOffset or 100
+local FallenPartsDestroyHeightOffset
+local Terrain = FindFirstChildOfClass(Workspace, "Terrain")
 
 local Camera = Workspace['CurrentCamera']
 local PreviousCameraCFrame = Camera['CFrame']
@@ -124,6 +102,11 @@ local Humanoid, Animator, RootPart, CFrameBackup
 -- // RunTime: Creating FakeRig
 
 local Character = Player['Character'] or SignalWait(Player['CharacterAdded'])
+
+if Character.Name ~= Player.Name then 
+	return 
+end
+
 local Descendants = CreateTable(GetDescendants(Character))
 
 local FakeRig, FakeHumanoid, FakeAnimator, FakeRoot, FakeRigChildren
@@ -144,6 +127,7 @@ local BreakJoints = Character['BreakJoints']
 local SetCore = StarterGui['SetCore']
 
 Destroy(QuickHumanoid)
+
 -- // RunTime: Functions
 
 -- // Instances
@@ -636,6 +620,10 @@ end
 -- // Cancel
 
 local function CancelScript()
+	if not IsDescendantOf(FakeRig, Workspace) then
+        return
+    end
+
 	local RootCFrame = FakeRoot.CFrame
 
 	ReplicateSignal(Player, "ConnectDiedSignalBackend")
@@ -660,7 +648,7 @@ local function CancelScript()
 	SetCore(StarterGui, "ResetButtonCallback", true)
 	Destroy(FakeRig)
 
-	if KryptonSetConfig.ReturnOnDeath then
+	if ReturnOnDeath then
 		local Root = WaitForInstance(Character, "Part", "HumanoidRootPart")
 
 		if Root then
@@ -687,7 +675,7 @@ local function OnPreRender()
 		end
 
 		if Camera.CameraType ~= CamCustomType then
-			Camera.CameraSubject = CamCustomType
+			Camera.CameraType = CamCustomType
 		end
 	end
 
@@ -726,7 +714,7 @@ local function OnPreSimulation()
 	SetSimulationRadius(MaxInteger)
 
 	SinedClock = Sine(ClockTPOT())
-	ReverseSleep = Vector3New(0.0075 * Sine(ClockTPOT() * 10), 0, 0.0065 * Cosine(ClockTPOT() * 7))
+	ReverseSleep = Vector3New(0.005 * Sine(ClockTPOT() * 100), 0, 0.005 * Cosine(ClockTPOT() * 100))
 end
 
 local function OnCharacterAdded(NewCharacter: Model)
@@ -768,71 +756,125 @@ local function OnCharacterAdded(NewCharacter: Model)
 
 	FakeRigChildren = GetChildren(FakeRig)
 
-	SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", KryptonSetConfig.OverlayFakeCharacter and 0.5 or 1, true)
+	SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", OverlayFakeCharacter and 0.5 or 1, true)
 	SetDescendantProperties(FakeRigChildren, "BasePart", "BrickColor", BrickColor.new("Black"), true)
 end
 
-local function StartReanimate()
-	-- This will get rewritten later, cbb rn.
-	KryptonSetConfig = KryptonConfiguration or Configuration or {}
-	FlingTable = KryptonSetConfig.Flinging or {}
-	RigName = KryptonSetConfig.RigName or "Evolution, it must've passed you by."
-	WaitTime = KryptonSetConfig.WaitTime or 0.251
-	RigScale = KryptonSetConfig.FakeRigScale or 1
-	DestroyHeightOffset = KryptonSetConfig['DestroyHeightOffset'] or 100
-	RadiusOffset = KryptonSetConfig.TeleportOffsetRadius or 21
-	Flinging = FlingTable.Flinging
-	FlingMethod = FlingTable.MethodUsed or "Hat"
-	FlingVelocity = FlingTable.Velocity or 8000
-	NoBodyNearby = KryptonSetConfig.NoBodyNearby
-	PermanentDeath = KryptonSetConfig.PermanentDeath
-	if not replicatesignal and KryptonSetConfig.PermanentDeath then
-		warn("ReplicateSignal not present in environment. PermanentDeath will not work.")
-		PermanentDeath = nil
-	end
+local DefaultHats = {
+	["Right Arm"] = {
+		{Texture = "14255544465", Mesh = "14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "4645402630", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(0.25,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(-90))},
+	},
 
-	Reclaim = NoBodyNearby and PermanentDeath and KryptonSetConfig.Reclaim
-	Refit = KryptonSetConfig.Refit
-	DontStartYet = KryptonSetConfig.DontStartYet
-	RefitCount = KryptonSetConfig.RefitHatCount or 2
-	AntiVoiding = KryptonSetConfig.AntiVoiding
-	NoCollisions = KryptonSetConfig.NoCollisions or Flinging 
-	SetPlayerChar = KryptonSetConfig.SetCharacter
-	ToolFlinging = KryptonSetConfig.ToolFlinging 
-	LimitHatsPerLimb = KryptonSetConfig.LimitHatsPerLimb 
-	DisableCharacterScripts = KryptonSetConfig.DisableCharacterScripts
+	["Left Arm"] = {
+		{Texture = "14255544465", Mesh = "14255522247", Name = "LARM", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "3650139425", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(-0.25,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(90))}
+	},
+
+	["Right Leg"] = {
+		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (RARM)", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "4622077774", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(90))},
+		{Texture = "3360978739", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(90))},
+	},
+
+	["Left Leg"] = {
+		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (LARM)", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "3860099469", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(-90))},
+		{Texture = "3409604993", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(-90))}
+	},
+
+	["Torso"] = {
+		{Texture = "13415110780", Mesh = "13421774668", Name = "MeshPartAccessory", Offset = CFrame.identity},
+		{Texture = "4819722776", Mesh = "4819720316", Name = "MeshPartAccessory", Offset = CFrame.Angles(0, 0, math.rad(-15))}
+	},
+}
+
+local function ValidateSetting(Name, Default, OtherTable)
+	local Table = OtherTable or ReanimateConfig
+	local Original = Table[Name]
+	return Original ~= nil and Original or Default
+end
+
+local function StartReanimate()
+	ReanimateConfig = KryptonConfiguration or Configuration or {}
+	FlingTable = ReanimateConfig.Flinging or {}
+
+	RigName = ValidateSetting("RigName", "Evolution, it must've passed you by.")
+
+	WaitTime = ValidateSetting("WaitTime", 0.251)
+	RigScale = ValidateSetting("FakeRigScale", 1)
+	RefitCount = ValidateSetting("RefitHatCount", 2)
+	RadiusOffset = ValidateSetting("TeleportOffsetRadius", 21)
+	DestroyHeightOffset = ValidateSetting("DestroyHeightOffset", 100)
+
+	Refit = ValidateSetting("Refit", false)
+	AntiVoiding = ValidateSetting("AntiVoiding", false)
+	DontStartYet = ValidateSetting("DontStartYet", false)
+	NoBodyNearby = ValidateSetting("NoBodyNearby", false)
+	NoCollisions = ValidateSetting("NoCollisions", false) or Flinging
+	ToolFlinging = ValidateSetting("ToolFlinging", false)
+	SetPlayerChar = ValidateSetting("SetCharacter", false)
+	OverlayFakeCharacter = ValidateSetting("OverlayFakeCharacter", false)
+	ReturnOnDeath = ValidateSetting("ReturnOnDeath", false)
+	Flinging = ValidateSetting("Flinging", "false", FlingTable) 
+	FlingVelocity = ValidateSetting("Velocity", 8000, FlingTable)
+	LimitHatsPerLimb = ValidateSetting("LimitHatsPerLimb", false)
+	FlingMethod = ValidateSetting("MethodUsed", "Hat", FlingTable) 
+	DisableCharacterScripts = ValidateSetting("DisableCharacterScripts", false)
+	PermanentDeath = replicatesignal and ValidateSetting("PermanentDeath", false)
+	Reclaim = NoBodyNearby and PermanentDeath and ValidateSetting("Reclaim", false)
+
+	Hats = ValidateSetting("Hats", {})
 	
-	if not PermanentDeath and KryptonSetConfig.Refit then
-		warn("Refit is unnecessary without permanent death. Setting Refit to false.")
+	FallenPartsDestroyHeightOffset = FallenPartsDestroyHeight + DestroyHeightOffset or 100
+    Character = Player['Character'] or SignalWait(Player['CharacterAdded'])
+
+	if not PermanentDeath and ReanimateConfig.Refit then
 		Refit = nil
 	end
 	
-	if not Reclaim and KryptonSetConfig.Reclaim then
-		warn("Reclaim is set to true, but NoBodyNearby and PermanentDeath are set to false. Reclaim will not work.")
-	end
-	
 	if not NoBodyNearby and FlingMethod == ("Hat" or "HatTouch") then
-		warn(`NoBodyNearby is required for Flinging using {FlingMethod}, but is disabled, turning off.`)
 		Flinging = nil
 	end
 	
-    Character = Player['Character'] or SignalWait(Player['CharacterAdded'])
-    
-    if Character.Name ~= Player.Name then
-        return
-    end
+    if Character.Name ~= Player.Name then 
+		return 
+	end
+
+	if not Hats[1] or ReanimateConfig.AccessoryFallbackDefaults then
+		local Types = { Name = "string", Texture = "string", Mesh = "string", Offset = "CFrame" }
+
+		for Name, Data in DefaultHats do
+			local HatsData = Hats[Name]
+			local Flagged = nil
+
+			if HatsData and typeof(HatsData) == "table" then
+				for _, Hat in HatsData do
+					for Key, Type in Types do
+						if typeof(Hat[Key]) ~= Type then
+							Flagged = true
+							break
+						end
+					end
+				end
+			else
+				Flagged = true
+			end
+
+			if Flagged then
+				Hats[Name] = table.clone(Data)
+			end
+		end
+	end
 
 	Descendants = CreateTable(GetDescendants(Character))
-	FakeRig = Players:CreateHumanoidModelFromDescription(
-		Instance.new("HumanoidDescription"), Enum.HumanoidRigType.R6
-	)
+	FakeRig = Players:CreateHumanoidModelFromDescription(Instance.new("HumanoidDescription"), Enum.HumanoidRigType.R6)
 
 	FakeHumanoid = FindFirstChildOfClass(FakeRig, "Humanoid")
 	FakeAnimator = FindFirstChildOfClass(FakeHumanoid, "Animator")
 	FakeRoot = FindFirstChild(FakeRig, "HumanoidRootPart")
 	FakeRigChildren = CreateTable(GetChildren(FakeRig))
 
-	local Terrain = WaitForInstance(Workspace, "Terrain", "Terrain")
 	Humanoid = WaitForInstance(Character, "Humanoid", nil)
 	RootPart = WaitForInstance(Character, "Part", "HumanoidRootPart")
 	Animator = WaitForInstance(Humanoid, "Animator", nil)
@@ -872,6 +914,15 @@ local function StartReanimate()
 		FakeRig:ScaleTo(RigScale)
 	end
 
+	for _, Any in GetDescendants(FakeRig) do
+		if IsA(Any, "Motor6D") then
+			local Name = Any.Part1.Name
+
+			JointsOffsets[Name] = Any.Transform
+			Joints[Name] = Any
+		end
+	end
+
 	if PermanentDeath then
 		SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", 0.5, true)
 		ReplicateSignal(Player, "ConnectDiedSignalBackend")
@@ -880,7 +931,7 @@ local function StartReanimate()
 		BringCharacter()
 	end
 
-	if KryptonSetConfig.Animations then
+	if ReanimateConfig.Animations then
 		local Animate = Instance.new("LocalScript")
 		Animate.Name = "Animate"
 		Animate.Parent = FakeRig
@@ -1008,34 +1059,8 @@ local function StartReanimate()
 		end))
 	end
 
-	if KryptonSetConfig.AccessoryFallbackDefaults then
-		local Types = { Name = "string", Texture = "string", Mesh = "string", Offset = "CFrame" }
-
-		for Name, Data in {} do
-			local HatsData = Hats[Name]
-			local Flagged = nil
-
-			if HatsData and typeof(HatsData) == "table" then
-				for _, Hat in HatsData do
-					for Key, Type in Types do
-						if typeof(Hat[Key]) ~= Type then
-							Flagged = true
-							break
-						end
-					end
-				end
-			else
-				Flagged = true
-			end
-
-			if Flagged then
-				Hats[Name] = table.clone(Data)
-			end
-		end
-	end
-
-	SetDescendantProperties(FakeRigChildren, "Decal", "Transparency", KryptonSetConfig.OverlayFakeCharacter and 0.5 or 1, true)
-	SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", KryptonSetConfig.OverlayFakeCharacter and 0.5 or 1, true)
+	SetDescendantProperties(FakeRigChildren, "Decal", "Transparency", OverlayFakeCharacter and 0.5 or 1, true)
+	SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", OverlayFakeCharacter and 0.5 or 1, true)
 	SetHumanoidStates()
 	FinalizeAccoutrements()
 	ApplyCharacter()
@@ -1045,7 +1070,7 @@ if not DontStartYet then
 	StartReanimate()
 end 
 
-return {
+local Lib = {
 	GetCharacter = function() -- Returns FakeRig Model, needed for scripts.
 		return FakeRig
 	end,
@@ -1056,6 +1081,10 @@ return {
 
 	GetRootPart = function() -- Returns HumanoidRootPart
 		return FakeRoot
+	end,
+
+	GetJoints = function()
+		return Joints
 	end,
 
 	GetHatInformation = function(Hat) -- Returns HumanoidRootPart
@@ -1154,22 +1183,21 @@ return {
 	SWait = task.wait, -- Stepped Wait
 
 	SetAnimationState = function(Status) -- Stops Animations
-		local Animator = FindFirstChildOfClass(FakeHumanoid, "Animator")
 		local Animate = FindFirstChild(FakeRig, "Animate")
 
 		if Animate then
-			Animate.Disabled = not Status
+			Animate.Enabled = Status
 		end
 
-		if not Status and Animator then
-			for _, Track in GetPlayingAnimationTracks(Animator) do
+		if Status and FakeAnimator then
+			for _, Track in GetPlayingAnimationTracks(FakeAnimator) do
 				Track:Stop()
 			end
 		end
 	end,
 
 	GetLoadLibrary = function()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Uncategorized-Scripts/main/LoadLib.lua"))()
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Uncategorized-Scripts/main/LoadLib.lua"))()
 	end,
 
 	CallFling = function(Model)
@@ -1204,10 +1232,110 @@ return {
 		end
 	end,
 
-	ReanimateVersion = function()
-		return "1.8-beta"
-	end
+	AnimationPlayer = {
+		Start = function(AnimationID: number)
+			if not FakeRig or CanInsertModels then return end
+
+			local FrameTimes = {}
+			local FrameData = {}
+
+			if AnimationThread then
+				task.cancel(AnimationThread)
+			end
+			if CurrentAnimation then
+				CurrentAnimation:Destroy()
+			end
+
+			local Animate = FindFirstChild(FakeRig, "Animate")
+
+			if Animate then
+				Animate.Disabled = true
+			end
+	
+			if FakeAnimator then
+				for _, Track in GetPlayingAnimationTracks(FakeAnimator) do
+					Track:Stop()
+				end
+			end
+
+			local AnimationModel = InsertService:LoadLocalAsset("rbxassetid://" .. tostring(AnimationID))
+
+			if not AnimationModel then
+				warn("Failed to load animation.")
+				return
+			end
+
+			CurrentAnimation = AnimationModel
+			CurrentAnimation.Name = "Animation"
+			CurrentAnimation.Parent = FakeRig
+
+			for _, Frame in GetChildren(CurrentAnimation) do
+				table.insert(FrameTimes, Frame.Time)
+				FrameData[Frame.Time] = {}
+
+				for _, Part in Frame:GetDescendants() do
+					table.insert(FrameData[Frame.Time], Part)
+				end
+			end
+
+			AnimationThread = task.spawn(function()
+				while true do
+					for i, Time in FrameTimes do
+						if not Character:IsDescendantOf(Workspace) then
+							break 
+						end
+
+						local FrameParts = FrameData[Time]
+
+						for _, KeyFramePart in FrameParts do
+							local Joint = Joints[KeyFramePart.Name]
+							if Joint then
+								Joint.Transform = KeyFramePart.CFrame
+							end
+						end
+
+						local Next = FrameTimes[i + 1]
+						if Next then
+							local Delay = Next - Time
+							task.wait(Delay / 1.75)
+						end
+					end
+
+					task.wait()
+				end
+
+				if CurrentAnimation then
+					CurrentAnimation:Destroy()
+				end
+
+				table.clear(FrameTimes)
+				table.clear(FrameData)
+				table.clear(Joints)
+			end)
+		end,
+
+		Stop = function()
+			if AnimationThread then
+				task.cancel(AnimationThread)
+			end
+			if CurrentAnimation then
+				CurrentAnimation:Destroy()
+			end
+			for Name, Joint in Joints do
+				Joint.Transform = JointsOffsets[Name]
+			end
+		end
+	},
+
 	StartReanimate = StartReanimate,
 	InstantRefit = RefitRig,
 	StopReanimate = CancelScript
 }
+
+task.wait(3)
+
+Lib.AnimationPlayer.Start(3262592866)
+
+task.wait(2)
+
+Lib.AnimationPlayer.Stop()
