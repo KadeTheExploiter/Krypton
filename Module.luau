@@ -1255,7 +1255,7 @@ return {
 				end
 			end
 
-			local Success, AnimationModel =  pcall(InsertService.LoadLocalAsset, InsertService, "rbxassetid://" .. tostring(4812941481))
+			local Success, AnimationModel =  pcall(InsertService.LoadLocalAsset, InsertService, "rbxassetid://" .. tostring(AnimationID))
 
 			if not Success then
 				warn("Failed to load animation.")
@@ -1320,7 +1320,7 @@ return {
 			local Animate = FindFirstChild(FakeRig, "Animate")
 
 			if Animate then
-				Animate.Enabled = Animations
+				Animate.Enabled = ReanimateConfig.Animations
 			end
 		end
 	},
