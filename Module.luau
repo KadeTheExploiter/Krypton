@@ -75,6 +75,9 @@ local HatsInUse = CreateTable()
 local JointsOffsets  = CreateTable()
 local Joints = CreateTable()
 
+local FrameTimes = {}
+local FrameData = {}
+
 local InsertService: InsertService = FindFirstChildOfClass(game, "InsertService")
 local Workspace: Workspace = FindFirstChildOfClass(game, "Workspace")
 local Players: Players = FindFirstChildOfClass(game, "Players")
@@ -1235,14 +1238,8 @@ return {
 		Start = function(AnimationID: number)
 			if not FakeRig then return end
 
-			local FrameTimes = {}
-			local FrameData = {}
-
 			if AnimationThread then
 				task.cancel(AnimationThread)
-			end
-			if CurrentAnimation then
-				CurrentAnimation:Destroy()
 			end
 
 			local Animate = FindFirstChild(FakeRig, "Animate")
@@ -1280,7 +1277,7 @@ return {
 			AnimationThread = task.spawn(function()
 				while true do
 					for i, Time in FrameTimes do
-						if not Character:IsDescendantOf(Workspace) then
+						if not IsDescendantOf(FakeRig, Workspace) then
 							break 
 						end
 
@@ -1302,14 +1299,6 @@ return {
 
 					task.wait()
 				end
-
-				if CurrentAnimation then
-					CurrentAnimation:Destroy()
-				end
-
-				table.clear(FrameTimes)
-				table.clear(FrameData)
-				table.clear(Joints)
 			end)
 		end,
 
@@ -1318,11 +1307,14 @@ return {
 				task.cancel(AnimationThread)
 			end
 			if CurrentAnimation then
-				CurrentAnimation:Destroy()
+				Destroy(CurrentAnimation)
 			end
 			for Name, Joint in Joints do
 				Joint.Transform = JointsOffsets[Name]
 			end
+
+			table.clear(FrameTimes)
+			table.clear(FrameData)
 
 			local Animate = FindFirstChild(FakeRig, "Animate")
 
