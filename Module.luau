@@ -12,10 +12,11 @@ local Sine = math.sin
 local Cosine = math.cos
 local ClockTPOT = os.clock
 
-local Hats = {}
-
+local Hats = {} 
+local KryptonConf = KryptonConfiguration
 local FlingTable, ReturnOnDeath, RigName, WaitTime, RigScale, DestroyHeightOffset, RadiusOffset, FlingMethod, FlingVelocity, RefitCount
-local Flinging, OverlayFakeCharacter, NoBodyNearby, PermanentDeath, Reclaim, Refit, DontStartYet, AntiVoiding, NoCollisions, SetPlayerChar, ToolFlinging, LimitHatsPerLimb, DisableCharacterScripts
+local Flinging, OverlayFakeCharacter, NoBodyNearby, PermanentDeath, Reclaim, Refit, AntiVoiding, NoCollisions, SetPlayerChar, ToolFlinging, LimitHatsPerLimb, DisableCharacterScripts
+DontStartYet = KryptonConf.DontStartYet -- Patchfix for private testing
 
 local GetPropertyChangedSignal = game.GetPropertyChangedSignal
 local FindFirstChildWhichIsA = game.FindFirstChildWhichIsA
