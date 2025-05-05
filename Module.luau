@@ -87,7 +87,6 @@ local SignalWait = Close['Wait']
 local SignalOnce = Close['Once']
 local Disconnect = SignalOnce(Close, function() end)['Disconnect']
 
-local CanInsertModels, _ = pcall(InsertService, "LoadLocalAsset", "rbxassetid://1")
 local CanChangeSimRadius, _ = pcall(GetPropertyChangedSignal, Players.LocalPlayer, "SimulationRadius")
 local FallenPartsDestroyHeight = Workspace['FallenPartsDestroyHeight'] 
 local FallenPartsDestroyHeightOffset
@@ -1070,7 +1069,7 @@ if not DontStartYet then
 	StartReanimate()
 end 
 
-local Lib = {
+return {
 	GetCharacter = function() -- Returns FakeRig Model, needed for scripts.
 		return FakeRig
 	end,
@@ -1234,7 +1233,7 @@ local Lib = {
 
 	AnimationPlayer = {
 		Start = function(AnimationID: number)
-			if not FakeRig or CanInsertModels then return end
+			if not FakeRig then return end
 
 			local FrameTimes = {}
 			local FrameData = {}
@@ -1258,9 +1257,9 @@ local Lib = {
 				end
 			end
 
-			local AnimationModel = InsertService:LoadLocalAsset("rbxassetid://" .. tostring(AnimationID))
+			local Success, AnimationModel = pcall(InsertService, "LoadLocalAsset", rbxassetid://" .. tostring(AnimationID))
 
-			if not AnimationModel then
+			if not Success then
 				warn("Failed to load animation.")
 				return
 			end
@@ -1331,11 +1330,3 @@ local Lib = {
 	InstantRefit = RefitRig,
 	StopReanimate = CancelScript
 }
-
-task.wait(3)
-
-Lib.AnimationPlayer.Start(3262592866)
-
-task.wait(2)
-
-Lib.AnimationPlayer.Stop()
