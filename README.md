@@ -62,12 +62,12 @@ KryptonConfiguration = {
 	Hats = {
 		["Right Arm"] = {
 			{Texture = "14255544465", Mesh = "14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))},
-			{Texture = "4645402630", Mesh = "3030546036", Name = "International Fedora", Offset = CFrameNew(0.25,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(-90))},
+			{Texture = "4645402630", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(0.25,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(-90))},
 		},
 
 		["Left Arm"] = {
 			{Texture = "14255544465", Mesh = "14255522247", Name = "LARM", Offset = CFrame.Angles(0, 0, math.rad(90))},
-			{Texture = "3650139425", Mesh = "3030546036", Name = "International Fedora", Offset =  CFrameNew(-0.25,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(90))}
+			{Texture = "3650139425", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(-0.25,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(90))}
 		},
 
 		["Right Leg"] = {
