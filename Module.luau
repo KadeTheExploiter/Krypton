@@ -16,7 +16,7 @@ local Hats = {}
 local ReanimateConfig = KryptonConfiguration or {}
 local DontStartYet = ReanimateConfig.DontStartYet -- Patchfix for private testing
 local FlingTable, ReturnOnDeath, RigName, WaitTime, RigScale, DestroyHeightOffset, RadiusOffset, FlingMethod, FlingVelocity, RefitCount
-local Flinging, OverlayFakeCharacter, NoBodyNearby, PermanentDeath, Reclaim, Refit, AntiVoiding, NoCollisions, SetPlayerChar, ToolFlinging, LimitHatsPerLimb, DisableCharacterScripts
+local Flinging, OverlayFakeCharacter, NoBodyNearby, PermanentDeath, Reclaim, AntisleepPower, Refit, AntiVoiding, NoCollisions, SetPlayerChar, ToolFlinging, LimitHatsPerLimb, DisableCharacterScripts
 
 local GetPropertyChangedSignal = game.GetPropertyChangedSignal
 local FindFirstChildWhichIsA = game.FindFirstChildWhichIsA
@@ -573,9 +573,9 @@ local function ReclaimHandle(Handle)
 	end
 end
 
-local function CalculateVelocity(Part1: BasePart): Vector3
+local function CalculateVelocity(Part0: BasePart, Part1: BasePart): Vector3
 	local BaseVelocity = Part1['AssemblyLinearVelocity']
-	local ScaledVelocity = BaseVelocity * Part1.Size['Magnitude']
+	local ScaledVelocity = BaseVelocity * Part0.Size['Magnitude']
 
 	local LookVector = Part1.CFrame['LookVector'] * BaseVelocity['Unit']
 	local LookVectorYAxis = GetAdjustedAxis(LookVector.Y + BaseVelocity.Y) + SinedClock
@@ -598,7 +598,7 @@ local function SetPhysicalProperties(Table: {[BasePart]: {BasePart | CFrame}}, A
 		Handle.Massless = true
 
 		if ApplyVelocity then
-			Handle.AssemblyLinearVelocity = CalculateVelocity(Part1)
+			Handle.AssemblyLinearVelocity = CalculateVelocity(Handle, Part1)
 			Handle.AssemblyAngularVelocity = Part1.AssemblyAngularVelocity
 		end
 
@@ -744,7 +744,7 @@ local function OnPreSimulation()
 	SetSimulationRadius(MaxInteger)
 
 	SinedClock = Sine(ClockTPOT())
-	ReverseSleep = Vector3New(0.005 * Sine(ClockTPOT() * 100), 0, 0.005 * Cosine(ClockTPOT() * 100))
+	ReverseSleep = Vector3New(0.005 * Sine(ClockTPOT() * 100), 0, 0.005 * Cosine(ClockTPOT() * 100)) * AntisleepPower
 end
 
 local function OnCharacterAdded(NewCharacter: Model)
@@ -795,12 +795,14 @@ local DefaultHats = {
 		{Texture = "14255544465", Mesh = "14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))},
 		{Texture = "4391374782", Mesh = "4324138105", Name = "MeshPartAccessory", Offset =  CFrame.new(0.05,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(90))},
 		{Texture = "4645402630", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(0.05,0,0) * CFrame.Angles(math.rad(90), 0, math.rad(-90))},
+		{Texture = "135650240593878", Mesh = "137702817952968", Name = "Accessory (RArmNoob)", Offset = CFrame.Angles(0, 0, math.rad(90))},
 	},
 
 	["Left Arm"] = {
 		{Texture = "14255544465", Mesh = "14255522247", Name = "LARM", Offset = CFrame.Angles(0, 0, math.rad(90))},
 		{Texture = "4154474807", Mesh = "4154474745", Name = "MeshPartAccessory", Offset =  CFrame.new(-0.05,0,0) * CFrame.Angles(math.rad(90), 0, math.rad(-90))},
-		{Texture = "3650139425", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(-0.05,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(90))}
+		{Texture = "3650139425", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(-0.05,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(90))},
+		{Texture = "135650240593878", Mesh = "137702817952968", Name = "Accessory (LArmNoob)", Offset = CFrame.Angles(0, 0, math.rad(90))},
 	},
 
 	["Right Leg"] = {
@@ -808,17 +810,21 @@ local DefaultHats = {
 		{Texture = "3360974849", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(90), 0, math.rad(-90))},
 		{Texture = "4622077774", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(90))},
 		{Texture = "3360978739", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(90))},
+		{Texture = "11159284657", Mesh = "11159370334", Name = "Unloaded head", Offset = CFrame.Angles(0, 0, math.rad(90))},
 	},
 
 	["Left Leg"] = {
 		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (LARM)", Offset = CFrame.Angles(0, 0, math.rad(90))},
 		{Texture = "3033903209", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(90), 0, math.rad(90))},
 		{Texture = "3860099469", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(-90))},
-		{Texture = "3409604993", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(-90))}
+		{Texture = "3409604993", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(-90))},
+		{Texture = "11263219250", Mesh = "11263221350", Name = "MeshPartAccessory", Offset = CFrame.Angles(0, 0, math.rad(90))},
 	},
 
 	["Torso"] = {
 		{Texture = "13415110780", Mesh = "13421774668", Name = "MeshPartAccessory", Offset = CFrame.identity},
+		{Texture = "17617036903", Mesh = "17617036887", Name = "Accessory (1x1x1x1's Transparent Torso)", Offset = CFrame.identity},
+		{Texture = "125975972015302", Mesh = "126825022897778", Name = "Accessory (TorsoNoob)", Offset = CFrame.identity},
 		{Texture = "4819722776", Mesh = "4819720316", Name = "MeshPartAccessory", Offset = CFrame.Angles(0, 0, math.rad(-15))}
 	},
 }
@@ -848,6 +854,7 @@ local function StartReanimate()
 	NoCollisions = ValidateSetting("NoCollisions", false) or Flinging
 	ToolFlinging = ValidateSetting("ToolFlinging", false)
 	SetPlayerChar = ValidateSetting("SetCharacter", false)
+	AntisleepPower = ValidateSetting("AntisleepPower", 1.025)
 	OverlayFakeCharacter = ValidateSetting("OverlayFakeCharacter", false)
 	ReturnOnDeath = ValidateSetting("ReturnOnDeath", false)
 	Flinging = ValidateSetting("Flinging", "false", FlingTable) 
@@ -1105,7 +1112,7 @@ if not DontStartYet then
 	StartReanimate()
 end 
 
-return {
+local Lib = {
 	GetCharacter = function() -- Returns FakeRig Model, needed for scripts.
 		return FakeRig
 	end,
@@ -1343,3 +1350,7 @@ return {
 	InstantRefit = RefitRig,
 	StopReanimate = CancelScript
 }
+
+task.wait(5)
+
+Lib.StopReanimate()
