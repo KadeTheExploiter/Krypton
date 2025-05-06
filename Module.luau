@@ -14,7 +14,7 @@ local ClockTPOT = os.clock
 
 local Hats = {} 
 local ReanimateConfig = KryptonConfiguration or {}
-local DontStartYet = ReanimateConfig.DontStartYet or false
+local DontStartYet = ReanimateConfig.DontStartYet -- Patchfix for private testing
 local FlingTable, ReturnOnDeath, RigName, WaitTime, RigScale, DestroyHeightOffset, RadiusOffset, FlingMethod, FlingVelocity, RefitCount
 local Flinging, OverlayFakeCharacter, NoBodyNearby, PermanentDeath, Reclaim, AntisleepPower, Refit, AntiVoiding, NoCollisions, SetPlayerChar, ToolFlinging, LimitHatsPerLimb, DisableCharacterScripts
 
@@ -151,10 +151,6 @@ end
 local function WaitForInstance(Parent: Instance, Class: string, Name: string | nil, Cooldown: number | nil)
 	local CurTime = Cooldown or 0
 
-	if not Parent then
-		return
-	end
-	
 	while 1 > CurTime do
 		for _, Any in GetChildren(Parent) do
 			if IsA(Any, Class) and (not Name or Any.Name == Name) then
@@ -629,10 +625,8 @@ end
 
 local function StopAnimationThread()
 	if AnimationThread then
-		Disconnect(AnimationThread)
-		AnimationThread = nil
+		task.cancel(AnimationThread)
 	end
-
 	if CurrentAnimation then
 		Destroy(CurrentAnimation)
 	end
@@ -772,11 +766,9 @@ local function OnCharacterAdded(NewCharacter: Model)
 	TotalHats = 0
 
 	Character = NewCharacter
-
-	Humanoid = WaitForInstance(Character, "Humanoid", "Humanoid", 1)
-	RootPart = WaitForInstance(Character, "Part", "HumanoidRootPart", 1)
-	Animator = WaitForInstance(Humanoid, "Animator", "Animator", 1)
-	Descendants = GetDescendants(Character)
+	Humanoid = WaitForInstance(Character, "Humanoid", nil)
+	RootPart = WaitForInstance(Character, "Part", "HumanoidRootPart")
+	Animator = WaitForInstance(Humanoid, "Animator", nil)
 	SetDescendantProperties(Descendants, "LocalScript", "Disabled", true, DisableCharacterScripts)
 
 	if not Humanoid and not RootPart then
@@ -1287,66 +1279,69 @@ return {
 
 	AnimationPlayer = {
 		Start = function(AnimationID: number)
-			if not FakeRig and not FakeRoot then return end
-			local Lerp = FakeRoot.CFrame.Lerp
+			if not FakeRig then return end
 
 			StopAnimationThread()
-	
+			
 			local Animate = FindFirstChild(FakeRig, "Animate")
-			if Animate then Animate.Disabled = true end
+
+			if Animate then
+				Animate.Disabled = true
+			end
 	
 			if FakeAnimator then
 				for _, Track in GetPlayingAnimationTracks(FakeAnimator) do
-					StopTrack(Track)
+					Track:Stop()
 				end
 			end
-	
-			local Success, AnimationModel = pcall(InsertService.LoadLocalAsset, InsertService, "rbxassetid://" .. tostring(AnimationID))
-			if not Success then warn("Failed to load animation.") return end
-	
+
+			local Success, AnimationModel =  pcall(InsertService.LoadLocalAsset, InsertService, "rbxassetid://" .. tostring(AnimationID))
+
+			if not Success then
+				warn("Failed to load animation.")
+				return
+			end
+
 			CurrentAnimation = AnimationModel
 			CurrentAnimation.Name = "Animation"
 			CurrentAnimation.Parent = FakeRig
-	
-			table.clear(FrameTimes)
-			table.clear(FrameData)
-	
+
 			for _, Frame in GetChildren(CurrentAnimation) do
 				table.insert(FrameTimes, Frame.Time)
 				FrameData[Frame.Time] = {}
-	
-				for _, Part in GetDescendants(Frame) do
-					FrameData[Frame.Time][Part.Name] = Part
+
+				for _, Part in Frame:GetDescendants() do
+					table.insert(FrameData[Frame.Time], Part)
 				end
 			end
-	
-			table.sort(FrameTimes)
-			local AnimationLength = FrameTimes[#FrameTimes]
-			local StartTime = ClockTPOT()
-	
-			AnimationThread = RunService.Heartbeat:Connect(function()
-				if not IsDescendantOf(FakeRig, Workspace) then return end
-	
-				local Elapsed = (ClockTPOT() - StartTime) % AnimationLength
-	
-				local _Index = 1
-				while _Index < #FrameTimes and FrameTimes[_Index + 1] <= Elapsed do
-					_Index += 1
-				end
-	
-				local _Current = FrameTimes[_Index]
-				local _Next = FrameTimes[_Index + 1] or _Current
-				local Alpha = (Elapsed - _Current) / (_Next - _Current)
-				local Frame1 = FrameData[_Current]
-				local Frame2 = FrameData[_Next]
-	
-				for Name, Part1 in Frame1 do
-					local Part2 = Frame2 and Frame2[Name]
-					local Joint = Joints[Name]
-					if Part2 and Joint then
-						local C0 = Lerp(Part1.CFrame, Part2.CFrame, Alpha)
-						Joint.Transform = C0
+
+			AnimationThread = task.spawn(function()
+				while true do
+					for i, Time in FrameTimes do
+						if not IsDescendantOf(FakeRig, Workspace) then
+							table.clear(FrameTimes)
+							table.clear(FrameData)
+
+							break
+						end
+
+						local FrameParts = FrameData[Time]
+
+						for _, KeyFramePart in FrameParts do
+							local Joint = Joints[KeyFramePart.Name]
+							if Joint then
+								Joint.Transform = KeyFramePart.CFrame
+							end
+						end
+
+						local Next = FrameTimes[i + 1]
+						if Next then
+							local Delay = Next - Time
+							task.wait(Delay / 1.75)
+						end
 					end
+
+					task.wait()
 				end
 			end)
 		end,
