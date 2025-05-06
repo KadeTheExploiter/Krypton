@@ -13,10 +13,10 @@ local Cosine = math.cos
 local ClockTPOT = os.clock
 
 local Hats = {} 
-local KryptonConf = KryptonConfiguration or {}
+local ReanimateConfig = KryptonConfiguration or {}
+local DontStartYet = ReanimateConfig.DontStartYet -- Patchfix for private testing
 local FlingTable, ReturnOnDeath, RigName, WaitTime, RigScale, DestroyHeightOffset, RadiusOffset, FlingMethod, FlingVelocity, RefitCount
 local Flinging, OverlayFakeCharacter, NoBodyNearby, PermanentDeath, Reclaim, Refit, AntiVoiding, NoCollisions, SetPlayerChar, ToolFlinging, LimitHatsPerLimb, DisableCharacterScripts
-DontStartYet = KryptonConf.DontStartYet -- Patchfix for private testing
 
 local GetPropertyChangedSignal = game.GetPropertyChangedSignal
 local FindFirstChildWhichIsA = game.FindFirstChildWhichIsA
@@ -64,6 +64,7 @@ local function CreateTable(Content: {any} | nil): {any}
 	return NewTable
 end
 
+local identifyexecutor = identifyexecutor
 local replicatesignal = replicatesignal
 local setscriptable = setscriptable 
 
@@ -332,13 +333,6 @@ local function FinalizeAccoutrements()
 	end
 end
 
-local function RefitRig()
-	TotalHats = 0
-	SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", 0.5, true)
-	SetDescendantProperties(FakeRigChildren, "BasePart", "BrickColor", BrickColor.new("Forest green"), true)
-	ReplicateSignal(Player, "ConnectDiedSignalBackend")
-end
-
 -- // Camera
 
 local function UpdateCameraCFrame()
@@ -514,6 +508,13 @@ end
 
 -- // Ownership
 
+local function RefitRig()
+	TotalHats = 0
+	SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", 0.5, true)
+	SetDescendantProperties(FakeRigChildren, "BasePart", "BrickColor", BrickColor.new("Forest green"), true)
+	ReplicateSignal(Player, "ConnectDiedSignalBackend")
+end
+
 local function SetSimulationRadius(Value: number)
 	if CanChangeSimRadius then
 		Player.SimulationRadius = Value
@@ -623,7 +624,7 @@ end
 -- // Cancel
 
 local function CancelScript()
-	if not IsDescendantOf(FakeRig, Workspace) then
+	if not IsDescendantOf(FakeRig, Workspace) or not FakeRoot then
 		return
 	end
 
@@ -650,6 +651,11 @@ local function CancelScript()
 
 	SetCore(StarterGui, "ResetButtonCallback", true)
 	Destroy(FakeRig)
+	
+	FakeRig = nil
+	FakeHumanoid = nil
+	FakeRoot = nil
+	FakeRigChildren = nil
 
 	if ReturnOnDeath then
 		local Root = WaitForInstance(Character, "Part", "HumanoidRootPart")
@@ -661,6 +667,27 @@ local function CancelScript()
 end
 
 -- // Runit
+
+local function StopAnimationThread()
+	if AnimationThread then
+		task.cancel(AnimationThread)
+	end
+	if CurrentAnimation then
+		Destroy(CurrentAnimation)
+	end
+	for Name, Joint in Joints do
+		Joint.Transform = JointsOffsets[Name]
+	end
+
+	table.clear(FrameTimes)
+	table.clear(FrameData)
+
+	local Animate = FindFirstChild(FakeRig, "Animate")
+
+	if Animate then
+		Animate.Enabled = ReanimateConfig.Animations
+	end
+end
 
 local function OnParentChange()
 	if not IsDescendantOf(FakeRig, Workspace) then
@@ -766,22 +793,26 @@ end
 local DefaultHats = {
 	["Right Arm"] = {
 		{Texture = "14255544465", Mesh = "14255522247", Name = "RARM", Offset = CFrame.Angles(0, 0, math.rad(90))},
-		{Texture = "4645402630", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(0.25,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(-90))},
+		{Texture = "4391374782", Mesh = "4324138105", Name = "MeshPartAccessory", Offset =  CFrame.new(0.05,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(90))},
+		{Texture = "4645402630", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(0.05,0,0) * CFrame.Angles(math.rad(90), 0, math.rad(-90))},
 	},
 
 	["Left Arm"] = {
 		{Texture = "14255544465", Mesh = "14255522247", Name = "LARM", Offset = CFrame.Angles(0, 0, math.rad(90))},
-		{Texture = "3650139425", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(-0.25,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(90))}
+		{Texture = "4154474807", Mesh = "4154474745", Name = "MeshPartAccessory", Offset =  CFrame.new(-0.05,0,0) * CFrame.Angles(math.rad(90), 0, math.rad(-90))},
+		{Texture = "3650139425", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(-0.05,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(90))}
 	},
 
 	["Right Leg"] = {
 		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (RARM)", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "3360974849", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(90), 0, math.rad(-90))},
 		{Texture = "4622077774", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(90))},
 		{Texture = "3360978739", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(90))},
 	},
 
 	["Left Leg"] = {
 		{Texture = "17374768001", Mesh = "17374767929", Name = "Accessory (LARM)", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "3033903209", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(90), 0, math.rad(90))},
 		{Texture = "3860099469", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(-90))},
 		{Texture = "3409604993", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(-90))}
 	},
@@ -799,7 +830,7 @@ local function ValidateSetting(Name, Default, OtherTable)
 end
 
 local function StartReanimate()
-	ReanimateConfig = KryptonConfiguration or Configuration or {}
+	ReanimateConfig = KryptonConfiguration or {}
 	FlingTable = ReanimateConfig.Flinging or {}
 
 	RigName = ValidateSetting("RigName", "Evolution, it must've passed you by.")
@@ -926,14 +957,6 @@ local function StartReanimate()
 		end
 	end
 
-	if PermanentDeath then
-		SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", 0.5, true)
-		ReplicateSignal(Player, "ConnectDiedSignalBackend")
-		TaskWait(Players.RespawnTime + 0.15)
-
-		BringCharacter()
-	end
-
 	if ReanimateConfig.Animations then
 		local Animate = Instance.new("LocalScript")
 		Animate.Name = "Animate"
@@ -999,11 +1022,13 @@ local function StartReanimate()
 			Current.Instance = Anim
 
 			Current.KeyframeHandler = SignalConnect(Current.AnimTrack.KeyframeReached, function(FrameName)
-				if Looped then
-					PlayAnimation(AnimName, 0.1, true)
-
-				elseif FrameName == "End" and AnimationTable[Current.Animation] then
-					PlayAnimation("Idle", 0.1)
+				if AnimationsToggled then
+					if Looped then
+						PlayAnimation(AnimName, 0.1, true)
+	
+					elseif FrameName == "End" and AnimationTable[Current.Animation] then
+						PlayAnimation("Idle", 0.1)
+					end
 				end
 			end)
 		end
@@ -1062,6 +1087,13 @@ local function StartReanimate()
 		end))
 	end
 
+	if PermanentDeath then
+		SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", 0.5, true)
+		ReplicateSignal(Player, "ConnectDiedSignalBackend")
+		TaskWait(Players.RespawnTime + 0.15)
+	end
+
+	BringCharacter()
 	SetDescendantProperties(FakeRigChildren, "Decal", "Transparency", OverlayFakeCharacter and 0.5 or 1, true)
 	SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", OverlayFakeCharacter and 0.5 or 1, true)
 	SetHumanoidStates()
@@ -1239,10 +1271,8 @@ return {
 		Start = function(AnimationID: number)
 			if not FakeRig then return end
 
-			if AnimationThread then
-				task.cancel(AnimationThread)
-			end
-
+			StopAnimationThread()
+			
 			local Animate = FindFirstChild(FakeRig, "Animate")
 
 			if Animate then
@@ -1282,7 +1312,7 @@ return {
 							table.clear(FrameTimes)
 							table.clear(FrameData)
 
-							break 
+							break
 						end
 
 						local FrameParts = FrameData[Time]
@@ -1306,26 +1336,7 @@ return {
 			end)
 		end,
 
-		Stop = function()
-			if AnimationThread then
-				task.cancel(AnimationThread)
-			end
-			if CurrentAnimation then
-				Destroy(CurrentAnimation)
-			end
-			for Name, Joint in Joints do
-				Joint.Transform = JointsOffsets[Name]
-			end
-
-			table.clear(FrameTimes)
-			table.clear(FrameData)
-
-			local Animate = FindFirstChild(FakeRig, "Animate")
-
-			if Animate then
-				Animate.Enabled = ReanimateConfig.Animations
-			end
-		end
+		Stop = StopAnimationThread
 	},
 
 	StartReanimate = StartReanimate,
