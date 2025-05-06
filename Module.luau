@@ -14,7 +14,7 @@ local ClockTPOT = os.clock
 
 local Hats = {} 
 local ReanimateConfig = KryptonConfiguration or {}
-local DontStartYet = ReanimateConfig.DontStartYet or true -- Patchfix for private testing
+local DontStartYet = ReanimateConfig.DontStartYet or false
 local FlingTable, ReturnOnDeath, RigName, WaitTime, RigScale, DestroyHeightOffset, RadiusOffset, FlingMethod, FlingVelocity, RefitCount
 local Flinging, OverlayFakeCharacter, NoBodyNearby, PermanentDeath, Reclaim, AntisleepPower, Refit, AntiVoiding, NoCollisions, SetPlayerChar, ToolFlinging, LimitHatsPerLimb, DisableCharacterScripts
 
@@ -80,7 +80,6 @@ local Joints = CreateTable()
 local FrameTimes = {}
 local FrameData = {}
 
-local TweenService: TweenService = FindFirstChildOfClass(game, "TweenService")
 local InsertService: InsertService = FindFirstChildOfClass(game, "InsertService")
 local Workspace: Workspace = FindFirstChildOfClass(game, "Workspace")
 local Players: Players = FindFirstChildOfClass(game, "Players")
@@ -152,6 +151,10 @@ end
 local function WaitForInstance(Parent: Instance, Class: string, Name: string | nil, Cooldown: number | nil)
 	local CurTime = Cooldown or 0
 
+	if not Parent then
+		return
+	end
+	
 	while 1 > CurTime do
 		for _, Any in GetChildren(Parent) do
 			if IsA(Any, Class) and (not Name or Any.Name == Name) then
@@ -769,9 +772,11 @@ local function OnCharacterAdded(NewCharacter: Model)
 	TotalHats = 0
 
 	Character = NewCharacter
-	Humanoid = WaitForInstance(Character, "Humanoid", nil)
-	RootPart = WaitForInstance(Character, "Part", "HumanoidRootPart")
-	Animator = WaitForInstance(Humanoid, "Animator", nil)
+
+	Humanoid = WaitForInstance(Character, "Humanoid", "Humanoid", 1)
+	RootPart = WaitForInstance(Character, "Part", "HumanoidRootPart", 1)
+	Animator = WaitForInstance(Humanoid, "Animator", "Animator", 1)
+	Descendants = GetDescendants(Character)
 	SetDescendantProperties(Descendants, "LocalScript", "Disabled", true, DisableCharacterScripts)
 
 	if not Humanoid and not RootPart then
@@ -840,21 +845,6 @@ local function ValidateSetting(Name, Default, OtherTable)
 	local Original = Table[Name]
 	return Original ~= nil and Original or Default
 end
-
-function Tween(Part, Target, Time)
-	local TweenInfo = TweenInfo.new(Time)
-
-	local Tween = TweenService:Create(Part, TweenInfo, {Transform = Target})
-	
-	Tween:Play()
-
-	SignalOnce(Tween.Completed, function()
-		Destroy(Tween)
-	end)
-
-	return Tween
-end
-
 
 local function StartReanimate()
 	ReanimateConfig = KryptonConfiguration or {}
@@ -1297,8 +1287,9 @@ return {
 
 	AnimationPlayer = {
 		Start = function(AnimationID: number)
-			if not FakeRig then return end
-	
+			if not FakeRig and not FakeRoot then return end
+			local Lerp = FakeRoot.CFrame.Lerp
+
 			StopAnimationThread()
 	
 			local Animate = FindFirstChild(FakeRig, "Animate")
@@ -1332,31 +1323,29 @@ return {
 			table.sort(FrameTimes)
 			local AnimationLength = FrameTimes[#FrameTimes]
 			local StartTime = ClockTPOT()
-			local Lerp = FakeRoot.CFrame.Lerp
-
-			AnimationThread = SignalConnect(RunService['PostSimulation'], function()
+	
+			AnimationThread = RunService.Heartbeat:Connect(function()
 				if not IsDescendantOf(FakeRig, Workspace) then return end
-				
+	
 				local Elapsed = (ClockTPOT() - StartTime) % AnimationLength
-				local Index = 1
-
-				while Index < #FrameTimes and FrameTimes[Index + 1] <= Elapsed do
-					Index += Index
+	
+				local _Index = 1
+				while _Index < #FrameTimes and FrameTimes[_Index + 1] <= Elapsed do
+					_Index += 1
 				end
 	
-				local Current = FrameTimes[Index]
-				local Next = FrameTimes[Index + 1] or Current
-
-				local Alpha = (Elapsed - Current) / (Next - Current)
-				local Frame1 = FrameData[Current]
-				local Frame2 = FrameData[Next]
+				local _Current = FrameTimes[_Index]
+				local _Next = FrameTimes[_Index + 1] or _Current
+				local Alpha = (Elapsed - _Current) / (_Next - _Current)
+				local Frame1 = FrameData[_Current]
+				local Frame2 = FrameData[_Next]
 	
 				for Name, Part1 in Frame1 do
 					local Part2 = Frame2 and Frame2[Name]
 					local Joint = Joints[Name]
-
 					if Part2 and Joint then
-						Joint.Transform = Lerp(Part1.CFrame, Part2.CFrame, Alpha)
+						local C0 = Lerp(Part1.CFrame, Part2.CFrame, Alpha)
+						Joint.Transform = C0
 					end
 				end
 			end)
