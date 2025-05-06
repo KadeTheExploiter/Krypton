@@ -623,6 +623,29 @@ end
 
 -- // Cancel
 
+local function StopAnimationThread()
+	if AnimationThread then
+		task.cancel(AnimationThread)
+	end
+	if CurrentAnimation then
+		Destroy(CurrentAnimation)
+	end
+	for Name, Joint in Joints do
+		Joint.Transform = JointsOffsets[Name]
+	end
+
+	table.clear(FrameTimes)
+	table.clear(FrameData)
+
+	if FakeRig then
+		local Animate = FindFirstChild(FakeRig, "Animate")
+
+		if Animate then
+			Animate.Enabled = ReanimateConfig.Animations
+		end
+	end
+end
+
 local function CancelScript()
 	if not IsDescendantOf(FakeRig, Workspace) or not FakeRoot then
 		return
@@ -634,6 +657,7 @@ local function CancelScript()
 	ChangeState(FakeHumanoid, Enum.HumanoidStateType.Dead)
 	Disconnect(PreSimulationEvent)
 	SignalWait(Player.CharacterAdded)
+	StopAnimationThread()
 	Character = Player.Character
 
  	-- memory free up real fe bypass
@@ -667,27 +691,6 @@ local function CancelScript()
 end
 
 -- // Runit
-
-local function StopAnimationThread()
-	if AnimationThread then
-		task.cancel(AnimationThread)
-	end
-	if CurrentAnimation then
-		Destroy(CurrentAnimation)
-	end
-	for Name, Joint in Joints do
-		Joint.Transform = JointsOffsets[Name]
-	end
-
-	table.clear(FrameTimes)
-	table.clear(FrameData)
-
-	local Animate = FindFirstChild(FakeRig, "Animate")
-
-	if Animate then
-		Animate.Enabled = ReanimateConfig.Animations
-	end
-end
 
 local function OnParentChange()
 	if not IsDescendantOf(FakeRig, Workspace) then
