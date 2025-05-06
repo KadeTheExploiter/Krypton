@@ -1351,5 +1351,6 @@ return {
 
 	StartReanimate = StartReanimate,
 	InstantRefit = RefitRig,
-	StopReanimate = CancelScript
+	StopReanimate = CancelScript,
+	Version = "1.8-Beta",
 }
