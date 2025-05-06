@@ -1112,7 +1112,7 @@ if not DontStartYet then
 	StartReanimate()
 end 
 
-local Lib = {
+return {
 	GetCharacter = function() -- Returns FakeRig Model, needed for scripts.
 		return FakeRig
 	end,
@@ -1350,7 +1350,3 @@ local Lib = {
 	InstantRefit = RefitRig,
 	StopReanimate = CancelScript
 }
-
-task.wait(5)
-
-Lib.StopReanimate()
