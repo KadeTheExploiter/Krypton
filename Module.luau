@@ -1133,7 +1133,7 @@ if not DontStartYet then
 	StartReanimate()
 end 
 
-getgenv().ReanimateModule = {
+return {
 	GetCharacter = function() -- Returns FakeRig Model, needed for scripts.
 		return FakeRig
 	end,
