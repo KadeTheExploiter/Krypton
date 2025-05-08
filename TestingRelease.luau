@@ -129,12 +129,9 @@ local SetCoreGuiEnabled = StarterGui['SetCoreGuiEnabled']
 local IsGrounded = Character.PrimaryPart['IsGrounded']
 local BreakJoints = Character['BreakJoints']
 local SetCore = StarterGui['SetCore']
-
 Destroy(QuickHumanoid)
 
 -- // RunTime: Functions
-
--- // Instances
 
 local function SetDescendantProperties(Table: {}, Class: string, Property: string, Value: any, Check: boolean)
 	if not Check then
@@ -386,16 +383,12 @@ end
 
 -- // Teleport
 
-local function ReplicateSignal(Any: Instance | RBXScriptSignal, Signal: string)
+local function ReplicateSignal(...)
 	if not replicatesignal then
 		return
 	end
 
-	if identifyexecutor and identifyexecutor() == "Celery" then
-		return replicatesignal(Any, Signal)
-	else
-		return replicatesignal(Any[Signal])
-	end
+	replicatesignal(...)
 end
 
 local function GetRandomRadius() : Vector3
@@ -769,7 +762,8 @@ local function OnCharacterAdded(NewCharacter: Model)
 	TotalHats = 0
 
 	Character = NewCharacter
-	Humanoid = WaitForInstance(Character, "Humanoid", nil)
+
+	Humanoid = WaitForInstance(Character, "Humanoid", "Humanoid")
 	RootPart = WaitForInstance(Character, "Part", "HumanoidRootPart")
 	Animator = WaitForInstance(Humanoid, "Animator", nil)
 	SetDescendantProperties(Descendants, "LocalScript", "Disabled", true, DisableCharacterScripts)
@@ -802,6 +796,7 @@ local DefaultHats = {
 		{Texture = "4391374782", Mesh = "4324138105", Name = "MeshPartAccessory", Offset =  CFrame.new(0.05,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(90))},
 		{Texture = "4645402630", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(0.05,0,0) * CFrame.Angles(math.rad(90), 0, math.rad(-90))},
 		{Texture = "135650240593878", Mesh = "137702817952968", Name = "Accessory (RArmNoob)", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "130809869695496", Mesh = "139733645770094", Name = "Accessory (RARM)", Offset = CFrame.Angles(0, 0, math.rad(90))},
 	},
 
 	["Left Arm"] = {
@@ -809,6 +804,7 @@ local DefaultHats = {
 		{Texture = "4154474807", Mesh = "4154474745", Name = "MeshPartAccessory", Offset =  CFrame.new(-0.05,0,0) * CFrame.Angles(math.rad(90), 0, math.rad(-90))},
 		{Texture = "3650139425", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.new(-0.05,0,0) * CFrame.Angles(math.rad(-90), 0, math.rad(90))},
 		{Texture = "135650240593878", Mesh = "137702817952968", Name = "Accessory (LArmNoob)", Offset = CFrame.Angles(0, 0, math.rad(90))},
+		{Texture = "71060417496309", Mesh = "105141400603933", Name = "Accessory (LARM)", Offset = CFrame.Angles(0, 0, math.rad(90))},
 	},
 
 	["Right Leg"] = {
@@ -1316,6 +1312,7 @@ return {
 			end
 	
 			table.sort(FrameTimes)
+			
 			local AnimationLength = FrameTimes[#FrameTimes]
 			local StartTime = ClockTPOT()
 	
