@@ -2,7 +2,7 @@
 > [!NOTE]
 > A reanimate is a technique uses that manipulates a player's character for custom animations or full-body control. This is typically achieved by creating a client-sided rig and welding unanchored parts that exist on server to the rig’s limbs.
 
-# Official Support
+# 💬 Official Support
   - Frequently asked questions and documentation, [Click there](https://krypton-reanimate.gitbook.io)
   - Discord server
   
@@ -109,5 +109,5 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/KadeTheExploiter/Kryp
 #### @myworldmain
   > Advice for shift lock fix, really appreciate it.
 
-#### [@empereans](https://github.com/Empereans)
+#### [@empereans](https://discordlookup.com/user/1330293219153416242)
   > Some fundamental tips.
