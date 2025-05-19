@@ -813,6 +813,7 @@ local DefaultHats = {
 		{Texture = "4622077774", Mesh = "3030546036", Name = "International Fedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(90))},
 		{Texture = "3360978739", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(90))},
 		{Texture = "11159284657", Mesh = "11159370334", Name = "Unloaded head", Offset = CFrame.Angles(0, 0, math.rad(90))},
+        {Texture = "136752500636691", Mesh = "125405780718494", Name = "Accessory (RArm)", Offset = CFrame.Angles(0, 0, math.rad(90))},
 	},
 
 	["Left Leg"] = {
@@ -821,7 +822,8 @@ local DefaultHats = {
 		{Texture = "3860099469", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(-90))},
 		{Texture = "3409604993", Mesh = "3030546036", Name = "InternationalFedora", Offset = CFrame.Angles(math.rad(-90), 0, math.rad(-90))},
 		{Texture = "11263219250", Mesh = "11263221350", Name = "MeshPartAccessory", Offset = CFrame.Angles(0, 0, math.rad(90))},
-	},
+	    {Texture = "136752500636691", Mesh = "125405780718494", Name = "Accessory (LArm)", Offset = CFrame.Angles(0, 0, math.rad(90))},
+    },
 
 	["Torso"] = {
 		{Texture = "13415110780", Mesh = "13421774668", Name = "MeshPartAccessory", Offset = CFrame.identity},
