@@ -391,11 +391,9 @@ local function ReplicateSignal(Any: Instance | RBXScriptSignal, Signal: string)
 		return
 	end
 
-	if identifyexecutor and identifyexecutor() == "Celery" then
-		return replicatesignal(Any, Signal)
-	else
-		return replicatesignal(Any[Signal])
-	end
+	local _Signal = Any[Signal]
+
+	return replicatesignal(_Signal)
 end
 
 local function GetRandomRadius() : Vector3
