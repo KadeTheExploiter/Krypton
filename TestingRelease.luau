@@ -388,7 +388,7 @@ local function ReplicateSignal(...)
 		return
 	end
 
-	replicatesignal(...)
+	return replicatesignal(...)
 end
 
 local function GetRandomRadius() : Vector3
@@ -478,7 +478,7 @@ local function SetHumanoidStates()
 	BreakJoints(Character)
 	
 	if replicatesignal then
-		ReplicateSignal(Humanoid, "ServerBreakJoints")
+		ReplicateSignal(Humanoid.ServerBreakJoints)
 	else
 		ChangeState(Humanoid, Enum.HumanoidStateType.Dead)
 	end
@@ -505,7 +505,7 @@ local function RefitRig()
 	TotalHats = 0
 	SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", 0.5, true)
 	SetDescendantProperties(FakeRigChildren, "BasePart", "BrickColor", BrickColor.new("Forest green"), true)
-	ReplicateSignal(Player, "ConnectDiedSignalBackend")
+	ReplicateSignal(Player.ConnectDiedSignalBackend)
 end
 
 local function SetSimulationRadius(Value: number)
@@ -649,7 +649,7 @@ local function CancelScript()
 
 	local RootCFrame = FakeRoot.CFrame
 
-	ReplicateSignal(Player, "ConnectDiedSignalBackend")
+	ReplicateSignal(Player.ConnectDiedSignalBackend)
 	ChangeState(FakeHumanoid, Enum.HumanoidStateType.Dead)
 	Disconnect(PreSimulationEvent)
 	SignalWait(Player.CharacterAdded)
@@ -774,7 +774,7 @@ local function OnCharacterAdded(NewCharacter: Model)
 
 	if PermanentDeath then
 		RootPart.CFrame = FakeRoot.CFrame * CFrameNew(0, 2 * RigScale, 0)
-		ReplicateSignal(Player, "ConnectDiedSignalBackend")
+		ReplicateSignal(Player.ConnectDiedSignalBackend)
 		TaskWait(Players.RespawnTime + 0.15)
 	end
 
@@ -1100,7 +1100,7 @@ local function StartReanimate()
 
 	if PermanentDeath then
 		SetDescendantProperties(FakeRigChildren, "BasePart", "Transparency", 0.5, true)
-		ReplicateSignal(Player, "ConnectDiedSignalBackend")
+		ReplicateSignal(Player.ConnectDiedSignalBackend)
 		TaskWait(Players.RespawnTime + 0.15)
 	end
 
